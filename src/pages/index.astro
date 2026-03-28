@@ -1,16 +1,20 @@
 ---
-// src/pages/index.astro
 import Layout from '../layouts/Layout.astro';
 import siteData from '../data/content.json';
 ---
 
 <Layout title="CMedia AI | Strona Główna">
     <div class="min-h-screen flex flex-col items-center justify-center bg-slate-900 text-white p-10 text-center">
-        <h1 class="text-5xl font-bold text-orange-500 mb-4">{siteData.heroTitle}</h1>
-        <p class="text-xl text-slate-300 mb-8">{siteData.heroSubtitle}</p>
+        <h1 data-cms="index.heroTitle" class="text-5xl font-bold text-orange-500 mb-4">
+            {siteData.pages.index.heroTitle}
+        </h1>
+        
+        <p data-cms="index.heroSubtitle" class="text-xl text-slate-300 mb-8">
+            {siteData.pages.index.heroSubtitle}
+        </p>
         
         <div class="inline-block px-6 py-3 mt-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-mono text-sm">
-            Kontakt: {siteData.contactEmail}
+            Kontakt: <span data-cms-global="email">{siteData.global.email}</span>
         </div>
     </div>
 </Layout>
