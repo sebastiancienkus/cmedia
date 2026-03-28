@@ -50,10 +50,9 @@ foreach ($data['changes'] as $fullKey => $newValue) {
 
 $jsonOutput = json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-// --- 5. ⚡ KLUCZ: NATYCHMIASTOWY ZAPIS LOKALNY (SEOHOST) ---
-// To sprawia, że zmiany są widoczne w 1 sekundę w panelu
-$local_path = __DIR__ . '/../../../content.json'; 
-// UWAGA: Sprawdź czy ścieżka prowadzi do głównego folderu, gdzie Astro trzyma content.json
+// --- 5. ⚡ KLUCZ: NATYCHMIASTOWY ZAPIS LOKALNY ---
+// Używamy DOCUMENT_ROOT, żeby mieć 100% pewności, że plik trafi do głównego folderu
+$local_path = $_SERVER['DOCUMENT_ROOT'] . '/content.json';
 file_put_contents($local_path, $jsonOutput);
 
 // --- 6. AKTUALIZACJA GITHUBA (W TLE) ---
