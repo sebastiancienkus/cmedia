@@ -2,7 +2,18 @@
     "global": {
         "phone": "+48 123 456 789",
         "email": "sebastiancienkus@gmail.com",
-        "address": "Lublin"
+        "address": "Lublin",
+        "theme": {
+            "colors": {
+                "brand": "#f97316",
+                "link": "#3b82f6",
+                "site_bg": "#0f172a",
+                "content_bg": "#1e293b",
+                "border_color": "#334155",
+                "heading": "#ffffff",
+                "text": "#94a3b8"
+            }
+        }
     },
     "pages": {
         "index": {
