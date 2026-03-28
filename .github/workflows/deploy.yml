@@ -16,7 +16,7 @@ jobs:
       - name: ⚙️ Setup Node.js (Wersja 22 dla Astro v5)
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # To naprawi błąd "Node.js not supported"
+          node-version: '22'
 
       - name: 📦 Instalacja zależności
         run: npm install
@@ -30,6 +30,8 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/    # GitHub wysyła tylko gotowy HTML
+          local-dir: ./dist/
           server-dir: ./public_html/
+          protocol: ftp
+          port: 21
           dangerous-clean-slate: false
