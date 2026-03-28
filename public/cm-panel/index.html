@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Panel CMS - CMedia</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 40px; display: flex; justify-content: center; }
+        .card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
+        input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #f97316; }
+        .separator { height: 1px; background: #334155; margin: 30px 0; }
+        button { background: #f97316; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: background 0.2s; }
+        button:hover { background: #ea580c; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="margin-top: 0; text-align: center;">🔧 Panel CMS</h2>
+        
+        <div class="input-group">
+            <label>Login:</label>
+            <input type="text" id="username" placeholder="Wpisz login">
+        </div>
+        <div class="input-group">
+            <label>Hasło:</label>
+            <input type="password" id="password" placeholder="Wpisz hasło">
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="input-group">
+            <label>Nagłówek główny na stronie:</label>
+            <input type="text" id="heroTitle" value="CMedia AI 🚀">
+        </div>
+        
+        <div class="input-group">
+            <label>Podtytuł na stronie:</label>
+            <input type="text" id="heroSubtitle" value="Twój własny, autorski system zarządzania.">
+        </div>
+        
+        <button onclick="saveChanges()">💾 Zapisz Zmiany</button>
+        <p id="status" style="text-align: center; margin-top: 20px; font-size: 14px;"></p>
+    </div>
+
+    <script>
+        async function saveChanges() {
+            const btn = document.querySelector('button');
+            const status = document.getElementById('status');
+            
+            const payload = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                heroTitle: document.getElementById('heroTitle').value,
+                heroSubtitle: document.getElementById('heroSubtitle').value
+            };
+
+            if(!payload.username || !payload.password) {
+                status.innerText = "❌ Wypełnij login i hasło!";
+                status.style.color = "#ef4444";
+                return;
+            }
+
+            btn.innerText = "⏳ Zapisywanie...";
+            status.innerText = "";
+
+            try {
+                // Łączymy się ze skryptem PHP w naszym nowym folderze
+                const response = await fetch('/cm-panel/api/save.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if(result.success) {
+                    status.innerText = "✅ Sukces! Zmiany wysłane do GitHuba. Strona zaktualizuje się w tle (~40s).";
+                    status.style.color = "#10b981";
+                } else {
+                    status.innerText = result.error;
+                    status.style.color = "#ef4444";
+                }
+            } catch(e) {
+                status.innerText = "❌ Błąd komunikacji z serwerem.";
+                status.style.color = "#ef4444";
+            } finally {
+                btn.innerText = "💾 Zapisz Zmiany";
+            }
+        }
+    </script>
+</body>
+</html>
