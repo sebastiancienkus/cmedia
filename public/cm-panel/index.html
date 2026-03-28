@@ -41,12 +41,12 @@
             
             <div class="input-group">
                 <label>Nagłówek główny:</label>
-                <input type="text" id="heroTitle" value="CMedia AI 🚀">
+                <input type="text" id="heroTitle" placeholder="Pobieranie danych...">
             </div>
             
             <div class="input-group">
                 <label>Podtytuł:</label>
-                <input type="text" id="heroSubtitle" value="Twój własny, autorski system zarządzania.">
+                <input type="text" id="heroSubtitle" placeholder="Pobieranie danych...">
             </div>
             
             <button onclick="saveChanges()">💾 Zapisz Zmiany</button>
@@ -57,7 +57,7 @@
     </div>
 
     <script>
-        // Funkcja logowania
+        // 1. Logowanie
         async function handleLogin() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
@@ -78,7 +78,7 @@
                 const result = await response.json();
 
                 if(result.success) {
-                    // --- TUTAJ NOWOŚĆ: ŁADOWANIE AKTUALNYCH DANYCH ---
+                    // KLUCZOWE: Pobierz dane z serwera ZANIM pokażesz panel
                     await loadCurrentData(); 
                     
                     document.getElementById('login-section').classList.add('hidden');
@@ -90,22 +90,28 @@
                     status.style.color = "#ef4444";
                 }
             } catch(e) {
-                status.innerText = "❌ Błąd połączenia.";
+                status.innerText = "❌ Błąd połączenia z API.";
             }
         }
 
-        // NOWA FUNKCJA: Pobiera aktualne teksty z serwera
+        // 2. Pobieranie danych przez mostek read.php
         async function loadCurrentData() {
             try {
-                const res = await fetch('/content.json?v=' + Math.random()); // ?v= zapobiega pamięci podręcznej
+                // Math.random zapobiega czytaniu starej wersji z cache przeglądarki
+                const res = await fetch('/cm-panel/api/read.php?v=' + Math.random());
                 const data = await res.json();
-                document.getElementById('heroTitle').value = data.heroTitle;
-                document.getElementById('heroSubtitle').value = data.heroSubtitle;
+                
+                if(data.heroTitle) {
+                    document.getElementById('heroTitle').value = data.heroTitle;
+                    document.getElementById('heroSubtitle').value = data.heroSubtitle;
+                }
             } catch (e) {
-                console.log("Nie udało się pobrać aktualnych danych, używam domyślnych.");
+                console.error("Błąd ładowania danych:", e);
+                document.getElementById('status').innerText = "⚠️ Nie udało się pobrać aktualnych danych.";
             }
         }
 
+        // 3. Zapisywanie zmian
         async function saveChanges() {
             const btn = document.querySelector('#editor-section button');
             const status = document.getElementById('status');
@@ -118,7 +124,7 @@
                 heroSubtitle: document.getElementById('heroSubtitle').value
             };
 
-            btn.innerText = "⏳ Wysyłanie do GitHub...";
+            btn.innerText = "⏳ Zapisywanie na GitHub...";
             try {
                 const response = await fetch('/cm-panel/api/save.php', {
                     method: 'POST',
@@ -127,14 +133,17 @@
                 });
                 const result = await response.json();
                 if(result.success) {
-                    status.innerText = "✅ Zapisano! GitHub teraz buduje stronę (potrwa to ok. 60-90s).";
+                    status.innerText = "✅ Zaktualizowano! Strona odświeży się za ok. 60-90s.";
                     status.style.color = "#10b981";
                 } else {
                     status.innerText = "❌ " + result.error;
                     status.style.color = "#ef4444";
                 }
-            } catch(e) { status.innerText = "❌ Błąd komunikacji."; }
-            finally { btn.innerText = "💾 Zapisz Zmiany"; }
+            } catch(e) { 
+                status.innerText = "❌ Błąd komunikacji podczas zapisu."; 
+            } finally { 
+                btn.innerText = "💾 Zapisz Zmiany"; 
+            }
         }
     </script>
 </body>
