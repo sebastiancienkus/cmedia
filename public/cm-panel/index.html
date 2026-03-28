@@ -3,147 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Panel CMS - CMedia</title>
-    <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; padding: 40px; display: flex; justify-content: center; }
-        .card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; outline: none; transition: border-color 0.2s; }
-        input:focus { border-color: #f97316; }
-        button { background: #f97316; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: background 0.2s; margin-top: 10px; }
-        button:hover { background: #ea580c; }
-        .hidden { display: none; }
-        #status { text-align: center; margin-top: 20px; font-size: 14px; }
-    </style>
+    <title>CMedia Visual CMS</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="card">
-        <h2 style="margin-top: 0; text-align: center;">🔧 Panel CMS</h2>
-        
-        <div id="login-section">
-            <div class="input-group">
-                <label>Login:</label>
-                <input type="text" id="username" placeholder="Wpisz login">
+    <div class="admin-panel">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="logo">🔧 CMedia CMS</span>
             </div>
-            <div class="input-group">
-                <label>Hasło:</label>
-                <input type="password" id="password" placeholder="Wpisz hasło">
+            <nav class="sidebar-nav">
+                <div class="nav-label">PODSTRONY</div>
+                <button onclick="loadPage('/')" class="nav-link active">🏠 Strona Główna</button>
+                <button onclick="loadPage('/o-nas')" class="nav-link">ℹ️ O nas</button>
+                
+                <div class="nav-label">USTAWIENIA</div>
+                <button onclick="showGlobal()" class="nav-link">🌐 Globalne (Tel/Email)</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="saveAll()" class="btn-save">💾 ZAPISZ WSZYSTKO</button>
+                <button onclick="location.reload()" class="btn-logout">🚪 Wyloguj</button>
             </div>
-            <button onclick="handleLogin()">🔓 Zaloguj się</button>
-        </div>
+        </aside>
 
-        <div id="editor-section" class="hidden">
-            <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 12px; color: #4ade80;">
-                Zalogowano jako: <span id="display-user"></span>
-            </div>
-            
-            <div class="input-group">
-                <label>Nagłówek główny:</label>
-                <input type="text" id="heroTitle" placeholder="Pobieranie danych...">
-            </div>
-            
-            <div class="input-group">
-                <label>Podtytuł:</label>
-                <input type="text" id="heroSubtitle" placeholder="Pobieranie danych...">
-            </div>
-            
-            <button onclick="saveChanges()">💾 Zapisz Zmiany</button>
-            <button onclick="location.reload()" style="background: transparent; border: 1px solid #334155; color: #94a3b8; font-size: 12px; padding: 8px; margin-top: 15px;">🚪 Wyloguj</button>
-        </div>
-
-        <p id="status"></p>
+        <main class="editor-area">
+            <header class="top-bar">
+                <span id="page-status">Gotowy do edycji</span>
+            </header>
+            <iframe id="site-preview" src="/?cms-edit=1"></iframe>
+        </main>
     </div>
 
     <script>
-        // 1. Logowanie
-        async function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const status = document.getElementById('status');
-
-            if(!user || !pass) {
-                status.innerText = "❌ Podaj dane!";
-                status.style.color = "#ef4444";
-                return;
-            }
-
-            try {
-                const response = await fetch('/cm-panel/api/save.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'login', username: user, password: pass })
-                });
-                const result = await response.json();
-
-                if(result.success) {
-                    // KLUCZOWE: Pobierz dane z serwera ZANIM pokażesz panel
-                    await loadCurrentData(); 
-                    
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('editor-section').classList.remove('hidden');
-                    document.getElementById('display-user').innerText = user;
-                    status.innerText = "";
-                } else {
-                    status.innerText = "❌ " + result.error;
-                    status.style.color = "#ef4444";
-                }
-            } catch(e) {
-                status.innerText = "❌ Błąd połączenia z API.";
-            }
+        // Funkcja zmieniająca stronę w podglądzie
+        function loadPage(path) {
+            const iframe = document.getElementById('site-preview');
+            iframe.src = path + "?cms-edit=1";
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.target.classList.add('active');
         }
 
-        // 2. Pobieranie danych przez mostek read.php
-        async function loadCurrentData() {
-            try {
-                // Math.random zapobiega czytaniu starej wersji z cache przeglądarki
-                const res = await fetch('/cm-panel/api/read.php?v=' + Math.random());
-                const data = await res.json();
-                
-                if(data.heroTitle) {
-                    document.getElementById('heroTitle').value = data.heroTitle;
-                    document.getElementById('heroSubtitle').value = data.heroSubtitle;
-                }
-            } catch (e) {
-                console.error("Błąd ładowania danych:", e);
-                document.getElementById('status').innerText = "⚠️ Nie udało się pobrać aktualnych danych.";
+        // Odbieranie zmian ze strony (z iframe)
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'cms-text-change') {
+                console.log("Zmiana w locie:", e.data);
+                document.getElementById('page-status').innerText = "⚠️ Masz niezapisane zmiany";
+                document.getElementById('page-status').style.color = "#f97316";
+                // Tutaj będziemy zbierać zmiany do paczki przed wysłaniem do save.php
             }
-        }
+        });
 
-        // 3. Zapisywanie zmian
-        async function saveChanges() {
-            const btn = document.querySelector('#editor-section button');
-            const status = document.getElementById('status');
-            
-            const payload = {
-                action: 'save',
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                heroTitle: document.getElementById('heroTitle').value,
-                heroSubtitle: document.getElementById('heroSubtitle').value
-            };
-
-            btn.innerText = "⏳ Zapisywanie na GitHub...";
-            try {
-                const response = await fetch('/cm-panel/api/save.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if(result.success) {
-                    status.innerText = "✅ Zaktualizowano! Strona odświeży się za ok. 60-90s.";
-                    status.style.color = "#10b981";
-                } else {
-                    status.innerText = "❌ " + result.error;
-                    status.style.color = "#ef4444";
-                }
-            } catch(e) { 
-                status.innerText = "❌ Błąd komunikacji podczas zapisu."; 
-            } finally { 
-                btn.innerText = "💾 Zapisz Zmiany"; 
-            }
+        async function saveAll() {
+            // Tutaj wywołamy Twój save.php, żeby wysłał zmiany na GitHuba
+            alert("Wysyłam zmiany do GitHuba... (tu podepniemy save.php)");
         }
     </script>
 </body>
