@@ -92,14 +92,21 @@
             if (path === '/') document.getElementById('btn-home').classList.add('active');
         }
 
-        window.addEventListener('message', function(e) {
-            if (e.data.type === 'cms-text-change') {
-                const key = e.data.scope === 'global' ? `global.${e.data.key}` : e.data.key;
-                pendingChanges[key] = e.data.value;
-                document.getElementById('page-status').innerText = `⚠️ Niezapisane zmiany: ${Object.keys(pendingChanges).length}`;
-                document.getElementById('page-status').style.color = "#f97316";
-            }
-        });
+      window.addEventListener('message', function(e) {
+    if (e.data.type === 'cms-text-change') {
+        // Tworzymy unikalny klucz dla obiektu zmian
+        const fullKey = e.data.scope === 'global' ? `global.${e.data.key}` : `index.${e.data.key}`;
+        
+        // Zapisujemy zmianę w pamięci panelu
+        pendingChanges[fullKey] = e.data.value;
+        
+        // Aktualizacja UI - licznik niezapisanych zmian
+        const status = document.getElementById('page-status');
+        const count = Object.keys(pendingChanges).length;
+        status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
+        status.style.color = "#f97316";
+    }
+});
 
         // --- ⚡ FUNKCJA INSTANT SAVE ---
         async function saveAll() {
