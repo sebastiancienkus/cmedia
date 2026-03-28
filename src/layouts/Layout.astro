@@ -1,47 +1,77 @@
-<script is:inline>
-  (function() {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.has('cms-edit')) return;
+---
+// src/layouts/Layout.astro
+import '../styles/global.css'; // 👈 Upewnij się, że ta ścieżka jest poprawna!
 
-    console.log("🚀 Tryb PRO-CMS Aktywny");
+interface Props {
+	title: string;
+}
 
-    // 1. Obsługa danych GLOBALNYCH (telefon, email itp.)
-    const globalElements = document.querySelectorAll('[data-cms-global]');
-    globalElements.forEach(el => {
-      el.contentEditable = "true";
-      el.style.borderBottom = "2px solid #22c55e"; // Zielony dla globalnych
-      
-      el.addEventListener('input', () => {
-        const key = el.getAttribute('data-cms-global');
-        const newValue = el.innerText;
+const { title } = Astro.props;
+---
 
-        // Synchronizacja wizualna: zmień wszystkie inne pola z tym samym kluczem na stronie
-        document.querySelectorAll(`[data-cms-global="${key}"]`).forEach(syncEl => {
-          if (syncEl !== el) syncEl.innerText = newValue;
-        });
-      });
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title}</title>
+	</head>
+	<body class="bg-slate-900 text-white antialiased">
+		
+		<slot />
 
-      el.addEventListener('blur', () => sendChange(el, true));
-    });
+		<script is:inline>
+		  (function() {
+		    const params = new URLSearchParams(window.location.search);
+		    // Skrypt odpala się TYLKO gdy w adresie jest ?cms-edit=1
+		    if (!params.has('cms-edit')) return;
 
-    // 2. Obsługa danych LOKALNYCH (teksty na podstronach)
-    const localElements = document.querySelectorAll('[data-cms]');
-    localElements.forEach(el => {
-      el.contentEditable = "true";
-      el.style.borderBottom = "2px solid #f97316"; // Pomarańczowy dla lokalnych
-      el.addEventListener('blur', () => sendChange(el, false));
-    });
+		    console.log("🚀 Tryb PRO-CMS Aktywny");
 
-    function sendChange(el, isGlobal) {
-      window.parent.postMessage({
-        type: 'cms-text-change',
-        scope: isGlobal ? 'global' : 'local',
-        key: el.getAttribute(isGlobal ? 'data-cms-global' : 'data-cms'),
-        value: el.innerText,
-        pageId: window.location.pathname
-      }, '*');
-    }
+		    // 1. Obsługa danych GLOBALNYCH (telefon, email itp.)
+		    const globalElements = document.querySelectorAll('[data-cms-global]');
+		    globalElements.forEach(el => {
+		      el.contentEditable = "true";
+		      el.style.borderBottom = "2px dashed #22c55e"; // Zielona przerywana linia
+		      el.style.cursor = "text";
+		      
+		      el.addEventListener('input', () => {
+		        const key = el.getAttribute('data-cms-global');
+		        const newValue = el.innerText;
 
-    window.parent.postMessage({ type: 'cms-ready' }, '*');
-  })();
-</script>
+		        // Synchronizacja wizualna: zmień wszystkie inne pola z tym samym kluczem
+		        document.querySelectorAll(`[data-cms-global="${key}"]`).forEach(syncEl => {
+		          if (syncEl !== el) syncEl.innerText = newValue;
+		        });
+		      });
+
+		      el.addEventListener('blur', () => sendChange(el, true));
+		    });
+
+		    // 2. Obsługa danych LOKALNYCH (każdy tag z data-cms)
+		    const localElements = document.querySelectorAll('[data-cms]');
+		    localElements.forEach(el => {
+		      el.contentEditable = "true";
+		      el.style.borderBottom = "2px dashed #f97316"; // Pomarańczowa przerywana linia
+		      el.style.cursor = "text";
+		      el.addEventListener('blur', () => sendChange(el, false));
+		    });
+
+		    function sendChange(el, isGlobal) {
+		      // Wysyłamy informację do panelu nadrzędnego
+		      window.parent.postMessage({
+		        type: 'cms-text-change',
+		        scope: isGlobal ? 'global' : 'local',
+		        key: el.getAttribute(isGlobal ? 'data-cms-global' : 'data-cms'),
+		        value: el.innerText,
+		        pageId: window.location.pathname
+		      }, '*');
+		    }
+
+		    // Informujemy panel, że strona jest gotowa
+		    window.parent.postMessage({ type: 'cms-ready' }, '*');
+		  })();
+		</script>
+	</body>
+</html>
