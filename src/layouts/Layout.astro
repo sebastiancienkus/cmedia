@@ -66,22 +66,26 @@ const { title } = Astro.props;
       }
     });
 
-    function initCMS() {
-      document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
-        el.contentEditable = "true";
-        el.style.borderBottom = "2px dashed #f97316";
-        el.style.outline = "none";
-        el.addEventListener('blur', () => {
-          window.parent.postMessage({
-            type: 'cms-text-change',
-            scope: el.hasAttribute('data-cms-global') ? 'global' : 'local',
-            key: el.getAttribute('data-cms-global') || el.getAttribute('data-cms'),
-            value: el.innerText
-          }, '*');
-        });
-      });
-      window.parent.postMessage({ type: 'cms-ready' }, '*');
-    }
+  // Inside src/layouts/Layout.astro
+
+function initCMS() {
+  document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
+    el.contentEditable = "true";
+    el.style.outline = "none";
+    el.style.cursor = "text";
+    
+    // --- 🛠️ ZMIANA: Z border-bottom na pełny border (ramkę) ---
+    // Stare: el.style.borderBottom = "2px dashed #f97316"; 
+    
+    // Nowe (Pełna ramka, ciasna):
+    el.style.border = "2px dashed #f97316"; // Ta linijka dodaje ramkę ze wszystkich czterech stron
+    
+    el.addEventListener('blur', () => {
+      // ... rest of your event listener stays the same ...
+    });
+  });
+  window.parent.postMessage({ type: 'cms-ready' }, '*');
+}
   })();
 </script>
 	</body>
