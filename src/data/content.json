@@ -6,7 +6,7 @@
     },
     "pages": {
         "index": {
-            "heroTitle": "Nagłówek",
+            "heroTitle": "Nagłówek H1",
             "heroSubtitle": "Przykładowy tekst"
         }
     }
