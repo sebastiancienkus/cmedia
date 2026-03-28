@@ -3,17 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMedia Visual CMS | Instant Mode</title>
+    <title>CMedia Visual CMS | Professional Style Guide</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .login-overlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; }
         .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .hidden { display: none !important; }
-        #page-status { font-weight: bold; transition: all 0.3s ease; }
-        /* Styl dla linku do strony na żywo */
+        #page-status { font-weight: bold; transition: all 0.3s ease; font-size: 13px; }
         .live-link { display: block; margin-top: 10px; font-size: 12px; color: #3b82f6; text-decoration: none; border: 1px solid #3b82f6; padding: 8px; border-radius: 6px; text-align: center; transition: 0.2s; }
         .live-link:hover { background: rgba(59, 130, 246, 0.1); }
+
+        /* --- STYL DLA STYLE GUIDE --- */
+        .style-guide-box { padding: 12px; background: #111827; border-radius: 10px; margin: 10px; border: 1px solid #1f2937; }
+        .style-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .style-row span { font-size: 11px; color: #9ca3af; }
+        .style-section-label { font-size: 10px; color: #4b5563; font-weight: bold; margin: 12px 0 6px 4px; text-transform: uppercase; }
+        
+        input[type="color"] {
+            appearance: none; -webkit-appearance: none; border: none; width: 24px; height: 24px; 
+            cursor: pointer; background: none; padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #374151; }
     </style>
 </head>
 <body>
@@ -22,23 +33,36 @@
             <h2>🔐 Panel CMS</h2>
             <input type="text" id="user" placeholder="Login">
             <input type="password" id="pass" placeholder="Hasło">
-            <button onclick="login()" class="btn-save" style="margin-top: 10px;">Zaloguj się</button>
+            <button onclick="login()" class="btn-save" style="margin-top: 10px; width: 100%;">Zaloguj się</button>
         </div>
     </div>
 
     <div id="cms-main" class="admin-panel hidden">
         <aside class="sidebar">
             <div class="sidebar-header"><span class="logo">🔧 CMedia CMS</span></div>
+            
             <nav class="sidebar-nav">
-                <div class="nav-label">PODSTRONY</div>
+                <div class="nav-label">STRONY</div>
                 <button onclick="loadPage('/')" class="nav-link active" id="btn-home">🏠 Strona Główna</button>
-                
-                <div class="nav-label">PODGLĄD</div>
-                <a href="/" target="_blank" class="live-link">👁️ Zobacz stronę Live</a>
-                
-                <div class="nav-label">USTAWIENIA</div>
-                <button class="nav-link" style="opacity: 0.5; cursor: default;">🌐 Globalne (Wkrótce)</button>
+                <a href="/" target="_blank" class="live-link">👁️ Zobacz Live</a>
+
+                <div class="nav-label">🎨 STYLE GUIDE</div>
+                <div class="style-guide-box">
+                    <div class="style-section-label">Główne</div>
+                    <div class="style-row"><span>Marka</span><input type="color" oninput="updateTheme('brand', this.value)" id="cp-brand"></div>
+                    <div class="style-row"><span>Linki</span><input type="color" oninput="updateTheme('link', this.value)" id="cp-link"></div>
+                    
+                    <div class="style-section-label">Tła i Ramki</div>
+                    <div class="style-row"><span>Tło witryny</span><input type="color" oninput="updateTheme('site-bg', this.value)" id="cp-site-bg"></div>
+                    <div class="style-row"><span>Tło treści</span><input type="color" oninput="updateTheme('content-bg', this.value)" id="cp-content-bg"></div>
+                    <div class="style-row"><span>Obramowanie</span><input type="color" oninput="updateTheme('border', this.value)" id="cp-border"></div>
+
+                    <div class="style-section-label">Tekst</div>
+                    <div class="style-row"><span>Nagłówki</span><input type="color" oninput="updateTheme('heading', this.value)" id="cp-heading"></div>
+                    <div class="style-row"><span>Główny tekst</span><input type="color" oninput="updateTheme('text', this.value)" id="cp-text"></div>
+                </div>
             </nav>
+
             <div class="sidebar-footer">
                 <button onclick="saveAll()" class="btn-save">💾 ZAPISZ WSZYSTKO</button>
                 <button onclick="logout()" class="btn-logout">🚪 Wyloguj</button>
@@ -52,47 +76,45 @@
             <iframe id="site-preview"></iframe>
         </main>
     </div>
-<div class="nav-label">🎨 STYLE GUIDE</div>
-<div style="padding:15px; background:#1e293b; border-radius:12px; margin:10px; border:1px solid #334155;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="font-size:12px;">Marka</span>
-        <input type="color" oninput="updateTheme('brand', this.value)" id="cp-brand">
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="font-size:12px;">Tło witryny</span>
-        <input type="color" oninput="updateTheme('site-bg', this.value)" id="cp-site-bg">
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="font-size:12px;">Obramowanie</span>
-        <input type="color" oninput="updateTheme('border', this.value)" id="cp-border">
-    </div>
-    </div>
 
-<script>
-function updateTheme(type, value) {
-    const jsonKey = type.replace('-', '_');
-    // Zapisujemy zmianę w pamięci
-    pendingChanges[`global.theme.colors.${jsonKey}`] = value;
-    
-    // ⚡ AKTUALIZACJA W RAMCE (Bez przeładowania!)
-    const iframe = document.getElementById('site-preview');
-    iframe.contentWindow.document.documentElement.style.setProperty(`--color-${type}`, value);
-    
-    document.getElementById('page-status').innerText = "⚠️ Zmiana stylu...";
-}
-</script>
     <script>
         let pendingChanges = {};
         let currentPath = '/';
 
-        function checkAuth() {
-            if (localStorage.getItem('cms_logged') === 'true') {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('cms-main').classList.remove('hidden');
-                loadPage('/');
+        // --- 🎨 FUNKCJA STYLE GUIDE ---
+        function updateTheme(type, value) {
+            // Mapa łącząca nazwy suwaków z kluczami w Twoim JSONie
+            const jsonKeyMap = {
+                'brand': 'brand',
+                'link': 'link',
+                'site-bg': 'site_bg',
+                'content-bg': 'content_bg',
+                'border': 'border_color',
+                'heading': 'heading',
+                'text': 'text'
+            };
+
+            const jsonKey = jsonKeyMap[type];
+            // Zapisujemy w pamięci zmian głęboko w global.theme.colors
+            pendingChanges[`global.theme.colors.${jsonKey}`] = value;
+            
+            // ⚡ NATYCHMIASTOWY PODGLĄD W RAMCE (Zmieniamy zmienną CSS w Iframe)
+            const iframe = document.getElementById('site-preview');
+            if (iframe.contentWindow) {
+                iframe.contentWindow.document.documentElement.style.setProperty(`--color-${type}`, value);
             }
+            
+            updateStatusText();
         }
 
+        function updateStatusText() {
+            const status = document.getElementById('page-status');
+            const count = Object.keys(pendingChanges).length;
+            status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
+            status.style.color = "#f97316";
+        }
+
+        // --- 🔒 AUTORYZACJA ---
         function login() {
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
@@ -104,85 +126,49 @@ function updateTheme(type, value) {
         }
 
         function logout() {
-            localStorage.removeItem('cms_logged');
-            localStorage.removeItem('cms_pass');
+            localStorage.clear();
             location.reload();
         }
 
+        function checkAuth() {
+            if (localStorage.getItem('cms_logged') === 'true') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('cms-main').classList.remove('hidden');
+                loadPage('/');
+            }
+        }
+
+        // --- 📄 ŁADOWANIE PODSTRONY ---
         function loadPage(path) {
             currentPath = path;
             const iframe = document.getElementById('site-preview');
-            // Cache Buster (?v=...) wymusza na przeglądarce pobranie nowo zapisanego pliku z serwera
-            const cacheBuster = "&v=" + Date.now();
-            iframe.src = path + "?cms-edit=1" + cacheBuster;
-
+            iframe.src = path + "?cms-edit=1&v=" + Date.now();
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (path === '/') document.getElementById('btn-home').classList.add('active');
         }
 
-      window.addEventListener('message', function(e) {
-    if (e.data.type === 'cms-text-change') {
-        // Tworzymy unikalny klucz dla obiektu zmian
-        const fullKey = e.data.scope === 'global' ? `global.${e.data.key}` : `index.${e.data.key}`;
-        
-        // Zapisujemy zmianę w pamięci panelu
-        pendingChanges[fullKey] = e.data.value;
-        
-        // Aktualizacja UI - licznik niezapisanych zmian
-        const status = document.getElementById('page-status');
-        const count = Object.keys(pendingChanges).length;
-        status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
-        status.style.color = "#f97316";
-    }
-});
+        // --- 📩 ODBIERANIE ZMIAN TEKSTU Z RAMKI ---
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'cms-text-change') {
+                const fullKey = e.data.scope === 'global' ? `global.${e.data.key}` : `index.${e.data.key}`;
+                pendingChanges[fullKey] = e.data.value;
+                updateStatusText();
+            }
+        });
 
-        // --- ⚡ FUNKCJA INSTANT SAVE ---
+        // --- 💾 ZAPISYWANIE ---
         async function saveAll() {
-            if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian!");
+            if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian do zapisu!");
             
             const btn = document.querySelector('.btn-save');
             const status = document.getElementById('page-status');
-            
-            const originalBtnText = btn.innerText;
             btn.innerText = "⚡ Zapisywanie...";
             btn.disabled = true;
-            
+
             try {
                 const res = await fetch('/cm-panel/api/save-visual.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: 'seba',
-                        password: localStorage.getItem('cms_pass'),
-                        changes: pendingChanges
-                    })
-                });
-                const result = await res.json();
-                
-                if (result.success) {
-                    pendingChanges = {}; // Czyścimy listę zmian
-                    status.innerText = "✅ Zapisano natychmiastowo!";
-                    status.style.color = "#22c55e";
-                    
-                    // Klucz: Odświeżamy podgląd od razu, bo PHP już nadpisał plik na serwerze!
-                    loadPage(currentPath);
-
-                    // Krótkie powiadomienie zamiast blokującego alertu (opcjonalnie)
-                    console.log("GitHub zaktualizuje repozytorium w tle.");
-                } else { 
-                    alert("❌ Błąd: " + result.error); 
-                    status.innerText = "❌ Błąd zapisu";
-                    status.style.color = "#ef4444";
-                }
-            } catch (e) { 
-                alert("Błąd połączenia z serwerem."); 
-            } finally {
-                btn.innerText = originalBtnText;
-                btn.disabled = false;
-            }
-        }
-
-        checkAuth();
-    </script>
-</body>
-</html>
+                        password:
