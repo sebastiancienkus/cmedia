@@ -10,6 +10,8 @@
         .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; }
         .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .hidden { display: none !important; }
+        /* Dodatkowy styl dla statusu */
+        #page-status { font-weight: bold; transition: color 0.3s; }
     </style>
 </head>
 <body>
@@ -27,7 +29,7 @@
             <div class="sidebar-header"><span class="logo">🔧 CMedia CMS</span></div>
             <nav class="sidebar-nav">
                 <div class="nav-label">PODSTRONY</div>
-                <button onclick="loadPage('/')" class="nav-link active">🏠 Strona Główna</button>
+                <button onclick="loadPage('/')" class="nav-link active" id="btn-home">🏠 Strona Główna</button>
                 <div class="nav-label">USTAWIENIA</div>
                 <button class="nav-link" style="opacity: 0.5; cursor: default;">🌐 Globalne (Wkrótce)</button>
             </nav>
@@ -38,20 +40,22 @@
         </aside>
 
         <main class="editor-area">
-            <header class="top-bar"><span id="page-status">Gotowy</span></header>
+            <header class="top-bar">
+                <span id="page-status">✅ Połączono</span>
+            </header>
             <iframe id="site-preview"></iframe>
         </main>
     </div>
 
     <script>
         let pendingChanges = {};
+        let currentPath = '/';
 
-        // 1. Logowanie i sprawdzanie sesji
         function checkAuth() {
             if (localStorage.getItem('cms_logged') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('cms-main').classList.remove('hidden');
-                loadPage('/');
+                loadPage('/'); // Pierwsze ładowanie
             }
         }
 
@@ -60,7 +64,7 @@
             const p = document.getElementById('pass').value;
             if (u === 'seba' && p === '727911300') {
                 localStorage.setItem('cms_logged', 'true');
-                localStorage.setItem('cms_pass', p); // Zapamiętujemy hasło do wysyłki
+                localStorage.setItem('cms_pass', p);
                 location.reload();
             } else { alert("Błędne dane!"); }
         }
@@ -71,11 +75,19 @@
             location.reload();
         }
 
+        // --- KLUCZOWA FUNKCJA: Ładowanie z Cache Busterem ---
         function loadPage(path) {
-            document.getElementById('site-preview').src = path + "?cms-edit=1";
+            currentPath = path;
+            const iframe = document.getElementById('site-preview');
+            // Dodajemy znacznik czasu (?v=...), aby przeglądarka pobrała nową wersję
+            const cacheBuster = "&v=" + Date.now();
+            iframe.src = path + "?cms-edit=1" + cacheBuster;
+
+            // UI: Aktywny link
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (path === '/') document.getElementById('btn-home').classList.add('active');
         }
 
-        // Odbieranie zmian z iframe
         window.addEventListener('message', function(e) {
             if (e.data.type === 'cms-text-change') {
                 const key = e.data.scope === 'global' ? `global.${e.data.key}` : e.data.key;
@@ -89,7 +101,9 @@
             if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian!");
             
             const btn = document.querySelector('.btn-save');
-            btn.innerText = "⏳ Zapisywanie...";
+            const status = document.getElementById('page-status');
+            btn.innerText = "⏳ Wysyłanie...";
+            btn.disabled = true;
             
             try {
                 const res = await fetch('/cm-panel/api/save-visual.php', {
@@ -102,13 +116,37 @@
                     })
                 });
                 const result = await res.json();
+                
                 if (result.success) {
-                    alert("✅ Zapisano pomyślnie!");
                     pendingChanges = {};
-                    location.reload();
-                } else { alert("❌ " + result.error); }
-            } catch (e) { alert("Błąd połączenia."); }
-            btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                    
+                    // Pokazujemy odliczanie zamiast przeładowywać cały panel
+                    let timeLeft = 60;
+                    const timer = setInterval(() => {
+                        status.innerText = `⏳ Budowanie strony: ${timeLeft}s...`;
+                        status.style.color = "#3b82f6";
+                        timeLeft--;
+                        if (timeLeft < 0) {
+                            clearInterval(timer);
+                            status.innerText = "✅ Gotowe! Odświeżam podgląd...";
+                            status.style.color = "#22c55e";
+                            btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                            btn.disabled = false;
+                            loadPage(currentPath); // Odświeżamy tylko ramkę z nowym v=...
+                        }
+                    }, 1000);
+
+                    alert("✅ Wysłano! GitHub potrzebuje ok. 60s na przebudowanie strony. Zobaczysz zmiany po odliczeniu.");
+                } else { 
+                    alert("❌ " + result.error); 
+                    btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                    btn.disabled = false;
+                }
+            } catch (e) { 
+                alert("Błąd połączenia."); 
+                btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                btn.disabled = false;
+            }
         }
 
         checkAuth();
