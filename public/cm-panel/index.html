@@ -69,7 +69,6 @@
                 return;
             }
 
-            // Wysyłamy prośbę o weryfikację do PHP
             try {
                 const response = await fetch('/cm-panel/api/save.php', {
                     method: 'POST',
@@ -79,6 +78,9 @@
                 const result = await response.json();
 
                 if(result.success) {
+                    // --- TUTAJ NOWOŚĆ: ŁADOWANIE AKTUALNYCH DANYCH ---
+                    await loadCurrentData(); 
+                    
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('editor-section').classList.remove('hidden');
                     document.getElementById('display-user').innerText = user;
@@ -92,7 +94,18 @@
             }
         }
 
-        // Funkcja zapisu (taka jak wcześniej, ale z akcją 'save')
+        // NOWA FUNKCJA: Pobiera aktualne teksty z serwera
+        async function loadCurrentData() {
+            try {
+                const res = await fetch('/content.json?v=' + Math.random()); // ?v= zapobiega pamięci podręcznej
+                const data = await res.json();
+                document.getElementById('heroTitle').value = data.heroTitle;
+                document.getElementById('heroSubtitle').value = data.heroSubtitle;
+            } catch (e) {
+                console.log("Nie udało się pobrać aktualnych danych, używam domyślnych.");
+            }
+        }
+
         async function saveChanges() {
             const btn = document.querySelector('#editor-section button');
             const status = document.getElementById('status');
@@ -105,7 +118,7 @@
                 heroSubtitle: document.getElementById('heroSubtitle').value
             };
 
-            btn.innerText = "⏳ Zapisywanie...";
+            btn.innerText = "⏳ Wysyłanie do GitHub...";
             try {
                 const response = await fetch('/cm-panel/api/save.php', {
                     method: 'POST',
@@ -114,13 +127,13 @@
                 });
                 const result = await response.json();
                 if(result.success) {
-                    status.innerText = "✅ Zaktualizowano! GitHub buduje stronę.";
+                    status.innerText = "✅ Zapisano! GitHub teraz buduje stronę (potrwa to ok. 60-90s).";
                     status.style.color = "#10b981";
                 } else {
                     status.innerText = "❌ " + result.error;
                     status.style.color = "#ef4444";
                 }
-            } catch(e) { status.innerText = "❌ Błąd."; }
+            } catch(e) { status.innerText = "❌ Błąd komunikacji."; }
             finally { btn.innerText = "💾 Zapisz Zmiany"; }
         }
     </script>
