@@ -1,5 +1,13 @@
 {
-    "heroTitle": "Architekt Strategii",
-    "heroSubtitle": "Przykładowy tekst",
-    "contactEmail": "biuro@sebastiancienkus.com"
+  "global": {
+    "phone": "+48 123 456 789",
+    "email": "sebastiancienkus@gmail.com",
+    "address": "Lublin"
+  },
+  "pages": {
+    "index": {
+      "heroTitle": "Nagłówek H1",
+      "heroSubtitle": "Przykładowy tekst"
+    }
+  }
 }
