@@ -5,94 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMedia Visual CMS</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .login-overlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; }
+        .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-    <div class="admin-panel">
+    <div id="login-screen" class="login-overlay">
+        <div class="login-card">
+            <h2>🔐 Panel CMS</h2>
+            <input type="text" id="user" placeholder="Login">
+            <input type="password" id="pass" placeholder="Hasło">
+            <button onclick="login()" class="btn-save" style="margin-top: 10px;">Zaloguj się</button>
+        </div>
+    </div>
+
+    <div id="cms-main" class="admin-panel hidden">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <span class="logo">🔧 CMedia CMS</span>
-            </div>
+            <div class="sidebar-header"><span class="logo">🔧 CMedia CMS</span></div>
             <nav class="sidebar-nav">
                 <div class="nav-label">PODSTRONY</div>
                 <button onclick="loadPage('/')" class="nav-link active">🏠 Strona Główna</button>
-                <button onclick="loadPage('/o-nas')" class="nav-link">ℹ️ O nas</button>
-                
                 <div class="nav-label">USTAWIENIA</div>
-                <button onclick="showGlobal()" class="nav-link">🌐 Globalne (Tel/Email)</button>
+                <button class="nav-link" style="opacity: 0.5; cursor: default;">🌐 Globalne (Wkrótce)</button>
             </nav>
             <div class="sidebar-footer">
                 <button onclick="saveAll()" class="btn-save">💾 ZAPISZ WSZYSTKO</button>
-                <button onclick="location.reload()" class="btn-logout">🚪 Wyloguj</button>
+                <button onclick="logout()" class="btn-logout">🚪 Wyloguj</button>
             </div>
         </aside>
 
         <main class="editor-area">
-            <header class="top-bar">
-                <span id="page-status">Gotowy do edycji</span>
-            </header>
-            <iframe id="site-preview" src="/?cms-edit=1"></iframe>
+            <header class="top-bar"><span id="page-status">Gotowy</span></header>
+            <iframe id="site-preview"></iframe>
         </main>
     </div>
 
     <script>
-        // Pamięć podręczna na zmiany
-let pendingChanges = {}; 
+        let pendingChanges = {};
 
-// Słuchamy sygnałów z Twojej strony (z Iframe)
-window.addEventListener('message', function(e) {
-    if (e.data.type === 'cms-text-change') {
-        // Zapisujemy: np. "index.heroTitle" -> "Nowa Treść"
-        // Jeśli zmiana dotyczy globalnych, klucz to np. "phone"
-        const storageKey = e.data.scope === 'global' ? `global.${e.data.key}` : e.data.key;
-        pendingChanges[storageKey] = e.data.value;
-        
-        // Aktualizacja statusu w barze
-        const status = document.getElementById('page-status');
-        const count = Object.keys(pendingChanges).length;
-        status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
-        status.style.color = "#f97316";
-    }
-});
-
-async function saveAll() {
-    if (Object.keys(pendingChanges).length === 0) {
-        alert("Brak zmian do zapisania!");
-        return;
-    }
-
-    const btn = document.querySelector('.btn-save');
-    const originalText = btn.innerText;
-    btn.innerText = "⏳ Wysyłanie...";
-    btn.disabled = true;
-
-    try {
-        const response = await fetch('/cm-panel/api/save-visual.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username: 'seba', // Twój login
-                password: 'TWOJE_HASLO', // Wpisz swoje hasło
-                changes: pendingChanges 
-            })
-        });
-        
-        const result = await response.json();
-
-        if (result.success) {
-            alert("✅ Zmiany wysłane do GitHuba! Strona odświeży się za ok. 60s.");
-            pendingChanges = {}; // Czyścimy listę zmian
-            document.getElementById('page-status').innerText = "✅ Zapisano pomyślnie";
-            document.getElementById('page-status').style.color = "#22c55e";
-        } else {
-            alert("❌ Błąd: " + result.error);
+        // 1. Logowanie i sprawdzanie sesji
+        function checkAuth() {
+            if (localStorage.getItem('cms_logged') === 'true') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('cms-main').classList.remove('hidden');
+                loadPage('/');
+            }
         }
-    } catch (e) {
-        alert("❌ Błąd połączenia z serwerem.");
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-}
+
+        function login() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if (u === 'seba' && p === '727911300') {
+                localStorage.setItem('cms_logged', 'true');
+                localStorage.setItem('cms_pass', p); // Zapamiętujemy hasło do wysyłki
+                location.reload();
+            } else { alert("Błędne dane!"); }
+        }
+
+        function logout() {
+            localStorage.removeItem('cms_logged');
+            localStorage.removeItem('cms_pass');
+            location.reload();
+        }
+
+        function loadPage(path) {
+            document.getElementById('site-preview').src = path + "?cms-edit=1";
+        }
+
+        // Odbieranie zmian z iframe
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'cms-text-change') {
+                const key = e.data.scope === 'global' ? `global.${e.data.key}` : e.data.key;
+                pendingChanges[key] = e.data.value;
+                document.getElementById('page-status').innerText = `⚠️ Niezapisane zmiany: ${Object.keys(pendingChanges).length}`;
+                document.getElementById('page-status').style.color = "#f97316";
+            }
+        });
+
+        async function saveAll() {
+            if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian!");
+            
+            const btn = document.querySelector('.btn-save');
+            btn.innerText = "⏳ Zapisywanie...";
+            
+            try {
+                const res = await fetch('/cm-panel/api/save-visual.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'seba',
+                        password: localStorage.getItem('cms_pass'),
+                        changes: pendingChanges
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert("✅ Zapisano pomyślnie!");
+                    pendingChanges = {};
+                    location.reload();
+                } else { alert("❌ " + result.error); }
+            } catch (e) { alert("Błąd połączenia."); }
+            btn.innerText = "💾 ZAPISZ WSZYSTKO";
+        }
+
+        checkAuth();
     </script>
 </body>
 </html>
