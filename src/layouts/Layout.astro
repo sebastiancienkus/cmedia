@@ -22,56 +22,50 @@ const { title } = Astro.props;
 		<slot />
 
 		<script is:inline>
-		  (function() {
-		    const params = new URLSearchParams(window.location.search);
-		    // Skrypt odpala się TYLKO gdy w adresie jest ?cms-edit=1
-		    if (!params.has('cms-edit')) return;
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('cms-edit')) return;
 
-		    console.log("🚀 Tryb PRO-CMS Aktywny");
+    // ⚡ INSTANT LOAD: Pobierz najnowsze dane z serwera, omijając cache
+    fetch('/content.json?v=' + Date.now())
+      .then(res => res.json())
+      .then(data => {
+        // Podmiana tekstów na stronie danymi z pliku
+        document.querySelectorAll('[data-cms]').forEach(el => {
+          const fullKey = el.getAttribute('data-cms');
+          if (fullKey.includes('.')) {
+            const [page, key] = fullKey.split('.');
+            if (data.pages?.[page]?.[key]) el.innerText = data.pages[page][key];
+          }
+        });
+        
+        document.querySelectorAll('[data-cms-global]').forEach(el => {
+          const key = el.getAttribute('data-cms-global');
+          if (data.global?.[key]) el.innerText = data.global[key];
+        });
 
-		    // 1. Obsługa danych GLOBALNYCH (telefon, email itp.)
-		    const globalElements = document.querySelectorAll('[data-cms-global]');
-		    globalElements.forEach(el => {
-		      el.contentEditable = "true";
-		      el.style.borderBottom = "2px dashed #22c55e"; // Zielona przerywana linia
-		      el.style.cursor = "text";
-		      
-		      el.addEventListener('input', () => {
-		        const key = el.getAttribute('data-cms-global');
-		        const newValue = el.innerText;
+        console.log("⚡ Dane zsynchronizowane natychmiastowo.");
+        initCMS(); // Aktywuj edycję po załadowaniu danych
+      });
 
-		        // Synchronizacja wizualna: zmień wszystkie inne pola z tym samym kluczem
-		        document.querySelectorAll(`[data-cms-global="${key}"]`).forEach(syncEl => {
-		          if (syncEl !== el) syncEl.innerText = newValue;
-		        });
-		      });
+    function initCMS() {
+      document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
+        el.contentEditable = "true";
+        el.style.outline = "none";
+        el.style.borderBottom = "2px dashed #f97316";
 
-		      el.addEventListener('blur', () => sendChange(el, true));
-		    });
-
-		    // 2. Obsługa danych LOKALNYCH (każdy tag z data-cms)
-		    const localElements = document.querySelectorAll('[data-cms]');
-		    localElements.forEach(el => {
-		      el.contentEditable = "true";
-		      el.style.borderBottom = "2px dashed #f97316"; // Pomarańczowa przerywana linia
-		      el.style.cursor = "text";
-		      el.addEventListener('blur', () => sendChange(el, false));
-		    });
-
-		    function sendChange(el, isGlobal) {
-		      // Wysyłamy informację do panelu nadrzędnego
-		      window.parent.postMessage({
-		        type: 'cms-text-change',
-		        scope: isGlobal ? 'global' : 'local',
-		        key: el.getAttribute(isGlobal ? 'data-cms-global' : 'data-cms'),
-		        value: el.innerText,
-		        pageId: window.location.pathname
-		      }, '*');
-		    }
-
-		    // Informujemy panel, że strona jest gotowa
-		    window.parent.postMessage({ type: 'cms-ready' }, '*');
-		  })();
+        el.addEventListener('blur', () => {
+          window.parent.postMessage({
+            type: 'cms-text-change',
+            scope: el.hasAttribute('data-cms-global') ? 'global' : 'local',
+            key: el.getAttribute('data-cms-global') || el.getAttribute('data-cms'),
+            value: el.innerText
+          }, '*');
+        });
+      });
+      window.parent.postMessage({ type: 'cms-ready' }, '*');
+    }
+  })();
 		</script>
 	</body>
 </html>
