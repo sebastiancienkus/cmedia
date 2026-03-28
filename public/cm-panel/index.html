@@ -36,27 +36,59 @@
 
     <script>
         // Funkcja zmieniająca stronę w podglądzie
-        function loadPage(path) {
-            const iframe = document.getElementById('site-preview');
-            iframe.src = path + "?cms-edit=1";
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            event.target.classList.add('active');
-        }
+       let pendingChanges = {}; // Tu zbieramy Twoje zmiany "w locie"
 
-        // Odbieranie zmian ze strony (z iframe)
-        window.addEventListener('message', function(e) {
-            if (e.data.type === 'cms-text-change') {
-                console.log("Zmiana w locie:", e.data);
-                document.getElementById('page-status').innerText = "⚠️ Masz niezapisane zmiany";
-                document.getElementById('page-status').style.color = "#f97316";
-                // Tutaj będziemy zbierać zmiany do paczki przed wysłaniem do save.php
-            }
+// Odbieranie zmian ze strony (z iframe)
+window.addEventListener('message', function(e) {
+    if (e.data.type === 'cms-text-change') {
+        // Zapisujemy zmianę: np. "index.heroTitle" -> "Nowy tekst"
+        pendingChanges[e.data.key] = e.data.value;
+        
+        const status = document.getElementById('page-status');
+        status.innerText = `⚠️ Niezapisane zmiany (${Object.keys(pendingChanges).length})`;
+        status.style.color = "#f97316";
+    }
+});
+
+async function saveAll() {
+    if (Object.keys(pendingChanges).length === 0) {
+        alert("Brak zmian do zapisania!");
+        return;
+    }
+
+    const btn = document.querySelector('.btn-save');
+    btn.innerText = "⏳ Zapisywanie na GitHub...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/cm-panel/api/save-visual.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                // Używamy Twoich danych logowania (na sztywno lub z sesji)
+                username: 'seba', 
+                password: 'TWOJE_HASLO', 
+                changes: pendingChanges 
+            })
         });
+        const result = await response.json();
 
-        async function saveAll() {
-            // Tutaj wywołamy Twój save.php, żeby wysłał zmiany na GitHuba
-            alert("Wysyłam zmiany do GitHuba... (tu podepniemy save.php)");
+        if (result.success) {
+            alert("✅ Zapisano pomyślnie! GitHub buduje stronę (ok. 60s).");
+            pendingChanges = {}; // Czyścimy pamięć
+            const status = document.getElementById('page-status');
+            status.innerText = "✅ Wszystko zapisane";
+            status.style.color = "#22c55e";
+        } else {
+            alert("❌ Błąd: " + result.error);
         }
+    } catch (e) {
+        alert("❌ Błąd połączenia z serwerem.");
+    } finally {
+        btn.innerText = "💾 ZAPISZ WSZYSTKO";
+        btn.disabled = false;
+    }
+}
     </script>
 </body>
 </html>
