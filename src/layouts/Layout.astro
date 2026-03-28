@@ -24,48 +24,53 @@ const { title } = Astro.props;
 	<script is:inline>
   (function() {
     const params = new URLSearchParams(window.location.search);
-    if (!params.has('cms-edit')) return;
+    const isEditMode = params.has('cms-edit');
 
-    console.log("⚡ Tryb LIVE-SYNC: Pobieranie najświeższych danych...");
-
-    // 1. Funkcja podmieniająca teksty na stronie
-    async function refreshContent() {
+    // ⚡ FUNKCJA SYNCHRONIZACJI (Działa dla wszystkich!)
+    async function syncLiveContent() {
       try {
-        // Pobieramy content.json bezpośrednio z serwera (omijamy cache)
+        // Pobieramy świeży plik JSON z serwera Seohost
         const res = await fetch('/content.json?v=' + Date.now());
-        if (!res.ok) throw new Error("Brak pliku content.json na serwerze");
+        if (!res.ok) return; // Jeśli pliku nie ma, zostajemy przy danych z budowania
         const data = await res.json();
 
-        // Podmiana danych LOKALNYCH (np. index.heroTitle)
+        // Podmiana tekstów lokalnych
         document.querySelectorAll('[data-cms]').forEach(el => {
           const fullKey = el.getAttribute('data-cms');
           const [page, key] = fullKey.split('.');
           if (data.pages?.[page]?.[key]) {
-            el.innerText = data.pages[page][key];
+            // Podmieniamy tylko jeśli tekst jest inny (żeby nie psuć focusu w edytorze)
+            if (el.innerText !== data.pages[page][key]) {
+              el.innerText = data.pages[page][key];
+            }
           }
         });
 
-        // Podmiana danych GLOBALNYCH
+        // Podmiana tekstów globalnych
         document.querySelectorAll('[data-cms-global]').forEach(el => {
           const key = el.getAttribute('data-cms-global');
-          if (data.global?.[key]) {
+          if (data.global?.[key] && el.innerText !== data.global[key]) {
             el.innerText = data.global[key];
           }
         });
-
-        console.log("✅ Dane zsynchronizowane.");
       } catch (e) {
-        console.warn("ℹ️ System czeka na pierwszy zapis, aby utworzyć plik lokalny.");
+        console.log("Strona używa danych statycznych z buildu.");
       }
     }
 
-    // 2. Aktywacja edytora wizualnego
-    function initEditable() {
+    // 1. Zawsze synchronizuj dane po załadowaniu
+    syncLiveContent().then(() => {
+      // 2. Jeśli jesteśmy w trybie edycji, włącz funkcje CMS
+      if (isEditMode) {
+        initCMS();
+      }
+    });
+
+    function initCMS() {
       document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
         el.contentEditable = "true";
         el.style.borderBottom = "2px dashed #f97316";
         el.style.outline = "none";
-
         el.addEventListener('blur', () => {
           window.parent.postMessage({
             type: 'cms-text-change',
@@ -77,9 +82,6 @@ const { title } = Astro.props;
       });
       window.parent.postMessage({ type: 'cms-ready' }, '*');
     }
-
-    // Odpalamy: Najpierw synchronizacja danych, potem włączenie edycji
-    refreshContent().then(initEditable);
   })();
 </script>
 	</body>
