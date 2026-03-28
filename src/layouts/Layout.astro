@@ -1,6 +1,6 @@
 ---
 // src/layouts/Layout.astro
-import '../styles/global.css'; // 👈 Upewnij się, że ta ścieżka jest poprawna!
+import '../styles/global.css'; 
 
 interface Props {
 	title: string;
@@ -16,81 +16,93 @@ const { title } = Astro.props;
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title}</title>
+		<style is:global>
+			/* Styl dla elementów w trybie edycji */
+			.cms-editing {
+				border: 2px dashed #f97316 !important;
+				padding: 6px !important;
+				border-radius: 8px !important;
+				outline: none !important;
+				transition: all 0.2s ease !important;
+				display: inline-block; /* Zapobiega rozjeżdżaniu się ramki */
+				cursor: text !important;
+			}
+			.cms-editing:hover {
+				border-color: #fb923c !important;
+				background-color: rgba(249, 115, 22, 0.05) !important;
+			}
+		</style>
 	</head>
 	<body class="bg-slate-900 text-white antialiased">
 		
 		<slot />
 
 	<script is:inline>
-  (function() {
-    const params = new URLSearchParams(window.location.search);
-    const isEditMode = params.has('cms-edit');
+	(function() {
+		const params = new URLSearchParams(window.location.search);
+		const isEditMode = params.has('cms-edit');
 
-    // ⚡ FUNKCJA SYNCHRONIZACJI (Działa dla wszystkich!)
-    async function syncLiveContent() {
-      try {
-        // Pobieramy świeży plik JSON z serwera Seohost
-        const res = await fetch('/content.json?v=' + Date.now());
-        if (!res.ok) return; // Jeśli pliku nie ma, zostajemy przy danych z budowania
-        const data = await res.json();
+		// 1. FUNKCJA SYNCHRONIZACJI (Pobiera najświeższe dane z serwera)
+		async function syncLiveContent() {
+			try {
+				const res = await fetch('/content.json?v=' + Date.now());
+				if (!res.ok) return; 
+				const data = await res.json();
 
-        // Podmiana tekstów lokalnych
-        document.querySelectorAll('[data-cms]').forEach(el => {
-          const fullKey = el.getAttribute('data-cms');
-          const [page, key] = fullKey.split('.');
-          if (data.pages?.[page]?.[key]) {
-            // Podmieniamy tylko jeśli tekst jest inny (żeby nie psuć focusu w edytorze)
-            if (el.innerText !== data.pages[page][key]) {
-              el.innerText = data.pages[page][key];
-            }
-          }
-        });
+				// Podmiana tekstów lokalnych [data-cms]
+				document.querySelectorAll('[data-cms]').forEach(el => {
+					const fullKey = el.getAttribute('data-cms');
+					const [page, key] = fullKey.split('.');
+					if (data.pages?.[page]?.[key]) {
+						if (el.innerText !== data.pages[page][key]) {
+							el.innerText = data.pages[page][key];
+						}
+					}
+				});
 
-        // Podmiana tekstów globalnych
-        document.querySelectorAll('[data-cms-global]').forEach(el => {
-          const key = el.getAttribute('data-cms-global');
-          if (data.global?.[key] && el.innerText !== data.global[key]) {
-            el.innerText = data.global[key];
-          }
-        });
-      } catch (e) {
-        console.log("Strona używa danych statycznych z buildu.");
-      }
-    }
+				// Podmiana tekstów globalnych [data-cms-global]
+				document.querySelectorAll('[data-cms-global]').forEach(el => {
+					const key = el.getAttribute('data-cms-global');
+					if (data.global?.[key] && el.innerText !== data.global[key]) {
+						el.innerText = data.global[key];
+					}
+				});
+			} catch (e) {
+				console.log("Strona używa danych statycznych.");
+			}
+		}
 
-    // 1. Zawsze synchronizuj dane po załadowaniu
-    syncLiveContent().then(() => {
-      // 2. Jeśli jesteśmy w trybie edycji, włącz funkcje CMS
-      if (isEditMode) {
-        initCMS();
-      }
-    });
+		// 2. FUNKCJA INICJUJĄCA EDYCJĘ (Włącza ramki i nasłuchiwanie klawiatury)
+		function initCMS() {
+			const editableElements = document.querySelectorAll('[data-cms], [data-cms-global]');
+			
+			editableElements.forEach(el => {
+				el.contentEditable = "true";
+				el.classList.add('cms-editing');
 
-// Inside src/layouts/Layout.astro
+				// ⚡ KLUCZOWA ZMIANA: 'input' zamiast 'blur'
+				// Wysyła zmianę do panelu przy każdym naciśnięciu klawisza
+				el.addEventListener('input', () => {
+					window.parent.postMessage({
+						type: 'cms-text-change',
+						scope: el.hasAttribute('data-cms-global') ? 'global' : 'local',
+						key: el.getAttribute('data-cms-global') || el.getAttribute('data-cms'),
+						value: el.innerText
+					}, '*');
+				});
+			});
 
-function initCMS() {
-  document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
-    el.contentEditable = "true";
-    el.style.outline = "none";
-    el.style.cursor = "text";
-    
-    // --- ⚡ NOWE ROZWIĄZANIE (Wersja Profesjonalna) ---
-    el.style.border = "2px dashed #f97316";    // Pełna ramka
-    
-    // 💡 Dodajemy margines wewnątrz, żeby tekst nie dotykał ramki
-    el.style.padding = "4px";                 
-    
-    // Opcjonalnie: Delikatnie zaokrąglone rogi ramki
-    el.style.borderRadius = "6px";
-    // ---------------------------------------------------
-    
-    el.addEventListener('blur', () => {
-      // ... rest of your event listener stays the same ...
-    });
-  });
-  window.parent.postMessage({ type: 'cms-ready' }, '*');
-}
-  })();
-</script>
+			// Informujemy panel, że ramka jest gotowa
+			window.parent.postMessage({ type: 'cms-ready' }, '*');
+		}
+
+		// ODPALANIE PROCESU
+		syncLiveContent().then(() => {
+			if (isEditMode) {
+				initCMS();
+			}
+		});
+	})();
+	</script>
 	</body>
 </html>
