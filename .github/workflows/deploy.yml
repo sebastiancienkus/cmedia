@@ -17,9 +17,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm' # TA LINIA DODAJE CACHE (MAGIA PRĘDKOŚCI)
 
       - name: 📦 Install dependencies
-        run: npm install
+        run: npm ci # 'npm ci' jest szybsze niż 'npm install' w automatyzacji
 
       - name: 🏗️ Build Astro
         run: npm run build
@@ -37,5 +38,5 @@ jobs:
           server-dir: ./
           protocol: ftp
           port: 21
-          dangerous-clean-slate: true
-          dangerously-disable-concurrent-uploads: true
+          dangerous-clean-slate: false # Zmień na false, żeby nie kasował wszystkiego za każdym razem (przyspiesza FTP)
+          dangerously-disable-concurrent-uploads: false # Pozwól na wysyłanie kilku plików naraz
