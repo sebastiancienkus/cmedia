@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMedia Visual CMS</title>
+    <title>CMedia Visual CMS | Instant Mode</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .login-overlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; }
         .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .hidden { display: none !important; }
-        /* Dodatkowy styl dla statusu */
-        #page-status { font-weight: bold; transition: color 0.3s; }
+        #page-status { font-weight: bold; transition: all 0.3s ease; }
+        /* Styl dla linku do strony na żywo */
+        .live-link { display: block; margin-top: 10px; font-size: 12px; color: #3b82f6; text-decoration: none; border: 1px solid #3b82f6; padding: 8px; border-radius: 6px; text-align: center; transition: 0.2s; }
+        .live-link:hover { background: rgba(59, 130, 246, 0.1); }
     </style>
 </head>
 <body>
@@ -30,6 +32,10 @@
             <nav class="sidebar-nav">
                 <div class="nav-label">PODSTRONY</div>
                 <button onclick="loadPage('/')" class="nav-link active" id="btn-home">🏠 Strona Główna</button>
+                
+                <div class="nav-label">PODGLĄD</div>
+                <a href="/" target="_blank" class="live-link">👁️ Zobacz stronę Live</a>
+                
                 <div class="nav-label">USTAWIENIA</div>
                 <button class="nav-link" style="opacity: 0.5; cursor: default;">🌐 Globalne (Wkrótce)</button>
             </nav>
@@ -41,7 +47,7 @@
 
         <main class="editor-area">
             <header class="top-bar">
-                <span id="page-status">✅ Połączono</span>
+                <span id="page-status">✅ System gotowy</span>
             </header>
             <iframe id="site-preview"></iframe>
         </main>
@@ -55,7 +61,7 @@
             if (localStorage.getItem('cms_logged') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('cms-main').classList.remove('hidden');
-                loadPage('/'); // Pierwsze ładowanie
+                loadPage('/');
             }
         }
 
@@ -75,15 +81,13 @@
             location.reload();
         }
 
-        // --- KLUCZOWA FUNKCJA: Ładowanie z Cache Busterem ---
         function loadPage(path) {
             currentPath = path;
             const iframe = document.getElementById('site-preview');
-            // Dodajemy znacznik czasu (?v=...), aby przeglądarka pobrała nową wersję
+            // Cache Buster (?v=...) wymusza na przeglądarce pobranie nowo zapisanego pliku z serwera
             const cacheBuster = "&v=" + Date.now();
             iframe.src = path + "?cms-edit=1" + cacheBuster;
 
-            // UI: Aktywny link
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (path === '/') document.getElementById('btn-home').classList.add('active');
         }
@@ -97,12 +101,15 @@
             }
         });
 
+        // --- ⚡ FUNKCJA INSTANT SAVE ---
         async function saveAll() {
             if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian!");
             
             const btn = document.querySelector('.btn-save');
             const status = document.getElementById('page-status');
-            btn.innerText = "⏳ Wysyłanie...";
+            
+            const originalBtnText = btn.innerText;
+            btn.innerText = "⚡ Zapisywanie...";
             btn.disabled = true;
             
             try {
@@ -118,33 +125,24 @@
                 const result = await res.json();
                 
                 if (result.success) {
-                    pendingChanges = {};
+                    pendingChanges = {}; // Czyścimy listę zmian
+                    status.innerText = "✅ Zapisano natychmiastowo!";
+                    status.style.color = "#22c55e";
                     
-                    // Pokazujemy odliczanie zamiast przeładowywać cały panel
-                    let timeLeft = 60;
-                    const timer = setInterval(() => {
-                        status.innerText = `⏳ Budowanie strony: ${timeLeft}s...`;
-                        status.style.color = "#3b82f6";
-                        timeLeft--;
-                        if (timeLeft < 0) {
-                            clearInterval(timer);
-                            status.innerText = "✅ Gotowe! Odświeżam podgląd...";
-                            status.style.color = "#22c55e";
-                            btn.innerText = "💾 ZAPISZ WSZYSTKO";
-                            btn.disabled = false;
-                            loadPage(currentPath); // Odświeżamy tylko ramkę z nowym v=...
-                        }
-                    }, 1000);
+                    // Klucz: Odświeżamy podgląd od razu, bo PHP już nadpisał plik na serwerze!
+                    loadPage(currentPath);
 
-                    alert("✅ Wysłano! GitHub potrzebuje ok. 60s na przebudowanie strony. Zobaczysz zmiany po odliczeniu.");
+                    // Krótkie powiadomienie zamiast blokującego alertu (opcjonalnie)
+                    console.log("GitHub zaktualizuje repozytorium w tle.");
                 } else { 
-                    alert("❌ " + result.error); 
-                    btn.innerText = "💾 ZAPISZ WSZYSTKO";
-                    btn.disabled = false;
+                    alert("❌ Błąd: " + result.error); 
+                    status.innerText = "❌ Błąd zapisu";
+                    status.style.color = "#ef4444";
                 }
             } catch (e) { 
-                alert("Błąd połączenia."); 
-                btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                alert("Błąd połączenia z serwerem."); 
+            } finally {
+                btn.innerText = originalBtnText;
                 btn.disabled = false;
             }
         }
