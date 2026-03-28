@@ -1,26 +1,27 @@
-name: Deploy to Seohost
+name: Deploy Website to Seohost
+
 on:
   push:
     branches:
       - main
 
 jobs:
-  deploy:
-    name: Deploy
+  web-deploy:
+    name: 🎉 Deploy
     runs-on: ubuntu-latest
     steps:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Use Node.js
+      - name: ⚙️ Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
       - name: 📦 Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: 🏗️ Build project
+      - name: 🏗️ Build Project
         run: npm run build
 
       - name: 📂 Sync files
@@ -30,4 +31,5 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          server-dir: ./
+          server-dir: /public_html/
+          dangerous-clean-slate: false
