@@ -31,7 +31,7 @@ jobs:
           user: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           localDir: ./dist/
-          # Używamy './', aby pliki trafiły bezpośrednio do folderu, 
-          # w którym ląduje Twoje połączenie FTP (bez tworzenia podfolderów)
+          # Używamy './', aby pliki trafiły dokładnie tam, gdzie ląduje połączenie FTP.
+          # Jeśli Twoje konto FTP celuje bezpośrednio w domenę, to kropka wystarczy.
           remoteDir: ./
           forcePassive: true
