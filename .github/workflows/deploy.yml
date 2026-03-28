@@ -24,6 +24,9 @@ jobs:
       - name: 🏗️ Build Astro
         run: npm run build
 
+      - name: 🔐 Wstrzyknij Token do PHP
+        run: sed -i 's/SEKRETNY_TOKEN_Z_GITHUBA/${{ secrets.CMS_TOKEN }}/g' dist/cm-panel/api/save.php
+
       - name: 📂 Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -31,12 +34,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # KLUCZOWA ZMIANA:
-          # Skoro konto robot-ai już celuje w public_html,
-          # używamy pustego server-dir lub kropki.
           server-dir: ./
           protocol: ftp
           port: 21
-          # Czyścimy stare śmieci, żeby nie było 404
           dangerous-clean-slate: true
           dangerously-disable-concurrent-uploads: true
