@@ -12,83 +12,116 @@
         label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
         input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; outline: none; transition: border-color 0.2s; }
         input:focus { border-color: #f97316; }
-        .separator { height: 1px; background: #334155; margin: 30px 0; }
-        button { background: #f97316; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: background 0.2s; }
+        button { background: #f97316; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: background 0.2s; margin-top: 10px; }
         button:hover { background: #ea580c; }
+        .hidden { display: none; }
+        #status { text-align: center; margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 style="margin-top: 0; text-align: center;">🔧 Panel CMS</h2>
         
-        <div class="input-group">
-            <label>Login:</label>
-            <input type="text" id="username" placeholder="Wpisz login">
-        </div>
-        <div class="input-group">
-            <label>Hasło:</label>
-            <input type="password" id="password" placeholder="Wpisz hasło">
+        <div id="login-section">
+            <div class="input-group">
+                <label>Login:</label>
+                <input type="text" id="username" placeholder="Wpisz login">
+            </div>
+            <div class="input-group">
+                <label>Hasło:</label>
+                <input type="password" id="password" placeholder="Wpisz hasło">
+            </div>
+            <button onclick="handleLogin()">🔓 Zaloguj się</button>
         </div>
 
-        <div class="separator"></div>
+        <div id="editor-section" class="hidden">
+            <div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 12px; color: #4ade80;">
+                Zalogowano jako: <span id="display-user"></span>
+            </div>
+            
+            <div class="input-group">
+                <label>Nagłówek główny:</label>
+                <input type="text" id="heroTitle" value="CMedia AI 🚀">
+            </div>
+            
+            <div class="input-group">
+                <label>Podtytuł:</label>
+                <input type="text" id="heroSubtitle" value="Twój własny, autorski system zarządzania.">
+            </div>
+            
+            <button onclick="saveChanges()">💾 Zapisz Zmiany</button>
+            <button onclick="location.reload()" style="background: transparent; border: 1px solid #334155; color: #94a3b8; font-size: 12px; padding: 8px; margin-top: 15px;">🚪 Wyloguj</button>
+        </div>
 
-        <div class="input-group">
-            <label>Nagłówek główny na stronie:</label>
-            <input type="text" id="heroTitle" value="CMedia AI 🚀">
-        </div>
-        
-        <div class="input-group">
-            <label>Podtytuł na stronie:</label>
-            <input type="text" id="heroSubtitle" value="Twój własny, autorski system zarządzania.">
-        </div>
-        
-        <button onclick="saveChanges()">💾 Zapisz Zmiany</button>
-        <p id="status" style="text-align: center; margin-top: 20px; font-size: 14px;"></p>
+        <p id="status"></p>
     </div>
 
     <script>
+        // Funkcja logowania
+        async function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const status = document.getElementById('status');
+
+            if(!user || !pass) {
+                status.innerText = "❌ Podaj dane!";
+                status.style.color = "#ef4444";
+                return;
+            }
+
+            // Wysyłamy prośbę o weryfikację do PHP
+            try {
+                const response = await fetch('/cm-panel/api/save.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', username: user, password: pass })
+                });
+                const result = await response.json();
+
+                if(result.success) {
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('editor-section').classList.remove('hidden');
+                    document.getElementById('display-user').innerText = user;
+                    status.innerText = "";
+                } else {
+                    status.innerText = "❌ " + result.error;
+                    status.style.color = "#ef4444";
+                }
+            } catch(e) {
+                status.innerText = "❌ Błąd połączenia.";
+            }
+        }
+
+        // Funkcja zapisu (taka jak wcześniej, ale z akcją 'save')
         async function saveChanges() {
-            const btn = document.querySelector('button');
+            const btn = document.querySelector('#editor-section button');
             const status = document.getElementById('status');
             
             const payload = {
+                action: 'save',
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value,
                 heroTitle: document.getElementById('heroTitle').value,
                 heroSubtitle: document.getElementById('heroSubtitle').value
             };
 
-            if(!payload.username || !payload.password) {
-                status.innerText = "❌ Wypełnij login i hasło!";
-                status.style.color = "#ef4444";
-                return;
-            }
-
             btn.innerText = "⏳ Zapisywanie...";
-            status.innerText = "";
-
             try {
-                // Łączymy się ze skryptem PHP w naszym nowym folderze
                 const response = await fetch('/cm-panel/api/save.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-
                 if(result.success) {
-                    status.innerText = "✅ Sukces! Zmiany wysłane do GitHuba. Strona zaktualizuje się w tle (~40s).";
+                    status.innerText = "✅ Zaktualizowano! GitHub buduje stronę.";
                     status.style.color = "#10b981";
                 } else {
-                    status.innerText = result.error;
+                    status.innerText = "❌ " + result.error;
                     status.style.color = "#ef4444";
                 }
-            } catch(e) {
-                status.innerText = "❌ Błąd komunikacji z serwerem.";
-                status.style.color = "#ef4444";
-            } finally {
-                btn.innerText = "💾 Zapisz Zmiany";
-            }
+            } catch(e) { status.innerText = "❌ Błąd."; }
+            finally { btn.innerText = "💾 Zapisz Zmiany"; }
         }
     </script>
 </body>
