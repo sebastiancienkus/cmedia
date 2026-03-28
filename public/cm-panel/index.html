@@ -52,7 +52,35 @@
             <iframe id="site-preview"></iframe>
         </main>
     </div>
+<div class="nav-label">🎨 STYLE GUIDE</div>
+<div style="padding:15px; background:#1e293b; border-radius:12px; margin:10px; border:1px solid #334155;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12px;">Marka</span>
+        <input type="color" oninput="updateTheme('brand', this.value)" id="cp-brand">
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12px;">Tło witryny</span>
+        <input type="color" oninput="updateTheme('site-bg', this.value)" id="cp-site-bg">
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12px;">Obramowanie</span>
+        <input type="color" oninput="updateTheme('border', this.value)" id="cp-border">
+    </div>
+    </div>
 
+<script>
+function updateTheme(type, value) {
+    const jsonKey = type.replace('-', '_');
+    // Zapisujemy zmianę w pamięci
+    pendingChanges[`global.theme.colors.${jsonKey}`] = value;
+    
+    // ⚡ AKTUALIZACJA W RAMCE (Bez przeładowania!)
+    const iframe = document.getElementById('site-preview');
+    iframe.contentWindow.document.documentElement.style.setProperty(`--color-${type}`, value);
+    
+    document.getElementById('page-status').innerText = "⚠️ Zmiana stylu...";
+}
+</script>
     <script>
         let pendingChanges = {};
         let currentPath = '/';
