@@ -31,11 +31,9 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # --- KLUCZOWA ZMIANA ŚCIEŻKI ---
+          # PRÓBA A: Celujemy w folder subdomeny wewnątrz domains
           server-dir: ./
-          # --- POPRAWKI DLA STABILNOŚCI ---
           protocol: ftp
           port: 21
-          timeout: 60000
           dangerously-disable-concurrent-uploads: true
-          state-name: .ftp-deploy-sync-state.json
+          timeout: 60000
