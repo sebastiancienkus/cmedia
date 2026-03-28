@@ -16,7 +16,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Zmienione na 22 dla Astro v5
+          node-version: 22
 
       - name: 📦 Install dependencies
         run: npm install --legacy-peer-deps
@@ -25,17 +25,14 @@ jobs:
         run: npm run build
 
       - name: 📂 Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: AykutSarac/ftp-deploy@v1.0.2
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
+          host: ${{ secrets.FTP_SERVER }}
+          user: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          # Ustawiamy ścieżkę docelową dokładnie tak, jak miałeś wcześniej
-          server-dir: ./public_html/
-          # --- POPRAWKI DLA STABILNOŚCI (Twoje sprawdzone parametry) ---
-          protocol: ftp
-          port: 21
-          timeout: 60000
-          dangerously-disable-concurrent-uploads: true
-          state-name: .ftp-deploy-sync-state.json
+          localDir: ./dist/
+          # Zmieniamy na './' - to oznacza, że robot po zalogowaniu 
+          # ma wrzucić pliki bezpośrednio tam, gdzie się znajduje,
+          # bez tworzenia dodatkowych folderów.
+          remoteDir: ./public_html/
+          forcePassive: true
