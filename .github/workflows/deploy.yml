@@ -17,16 +17,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm' # TA LINIA DODAJE CACHE (MAGIA PRĘDKOŚCI)
+          cache: 'npm' # Przyspiesza budowanie przy kolejnych razach
 
       - name: 📦 Install dependencies
-        run: npm ci # 'npm ci' jest szybsze niż 'npm install' w automatyzacji
+        run: npm ci 
 
       - name: 🏗️ Build Astro
         run: npm run build
 
       - name: 🔐 Wstrzyknij Token do PHP
         run: sed -i 's/SEKRETNY_TOKEN_Z_GITHUBA/${{ secrets.CMS_TOKEN }}/g' dist/cm-panel/api/save.php
+
+      # --- KLUCZOWY KROK DLA TWOJEGO PANELU ---
+      - name: 📄 Kopiuj dane do wersji produkcyjnej
+        run: cp src/data/content.json dist/content.json
+      # ----------------------------------------
 
       - name: 📂 Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -38,5 +43,5 @@ jobs:
           server-dir: ./
           protocol: ftp
           port: 21
-          dangerous-clean-slate: false # Zmień na false, żeby nie kasował wszystkiego za każdym razem (przyspiesza FTP)
-          dangerously-disable-concurrent-uploads: false # Pozwól na wysyłanie kilku plików naraz
+          dangerous-clean-slate: false
+          dangerously-disable-concurrent-uploads: false
