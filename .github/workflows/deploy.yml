@@ -1,4 +1,4 @@
-name: Deploy Website to Seohost
+name: 🚀 Deploy Astro to Seohost
 
 on:
   push:
@@ -7,29 +7,29 @@ on:
 
 jobs:
   web-deploy:
-    name: 🎉 Deploy
+    name: 🎉 Build and Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: 🚚 Get latest code
+      - name: 🚚 Pobieranie kodu z GitHub
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node
+      - name: ⚙️ Setup Node.js (Wersja 22 dla Astro v5)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' # To naprawi błąd "Node.js not supported"
 
-      - name: 📦 Install dependencies
+      - name: 📦 Instalacja zależności
         run: npm install
 
-      - name: 🏗️ Build Project
+      - name: 🏗️ Budowanie projektu (Generowanie HTML)
         run: npm run build
 
-      - name: 📂 Sync files
+      - name: 📂 Wysyłka gotowych plików na Seohost
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
+          local-dir: ./dist/    # GitHub wysyła tylko gotowy HTML
           server-dir: ./public_html/
           dangerous-clean-slate: false
