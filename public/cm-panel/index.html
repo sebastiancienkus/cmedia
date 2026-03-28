@@ -35,17 +35,21 @@
     </div>
 
     <script>
-        // Funkcja zmieniająca stronę w podglądzie
-       let pendingChanges = {}; // Tu zbieramy Twoje zmiany "w locie"
+        // Pamięć podręczna na zmiany
+let pendingChanges = {}; 
 
-// Odbieranie zmian ze strony (z iframe)
+// Słuchamy sygnałów z Twojej strony (z Iframe)
 window.addEventListener('message', function(e) {
     if (e.data.type === 'cms-text-change') {
-        // Zapisujemy zmianę: np. "index.heroTitle" -> "Nowy tekst"
-        pendingChanges[e.data.key] = e.data.value;
+        // Zapisujemy: np. "index.heroTitle" -> "Nowa Treść"
+        // Jeśli zmiana dotyczy globalnych, klucz to np. "phone"
+        const storageKey = e.data.scope === 'global' ? `global.${e.data.key}` : e.data.key;
+        pendingChanges[storageKey] = e.data.value;
         
+        // Aktualizacja statusu w barze
         const status = document.getElementById('page-status');
-        status.innerText = `⚠️ Niezapisane zmiany (${Object.keys(pendingChanges).length})`;
+        const count = Object.keys(pendingChanges).length;
+        status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
         status.style.color = "#f97316";
     }
 });
@@ -57,7 +61,8 @@ async function saveAll() {
     }
 
     const btn = document.querySelector('.btn-save');
-    btn.innerText = "⏳ Zapisywanie na GitHub...";
+    const originalText = btn.innerText;
+    btn.innerText = "⏳ Wysyłanie...";
     btn.disabled = true;
 
     try {
@@ -65,27 +70,26 @@ async function saveAll() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                // Używamy Twoich danych logowania (na sztywno lub z sesji)
-                username: 'seba', 
-                password: 'TWOJE_HASLO', 
+                username: 'seba', // Twój login
+                password: 'TWOJE_HASLO', // Wpisz swoje hasło
                 changes: pendingChanges 
             })
         });
+        
         const result = await response.json();
 
         if (result.success) {
-            alert("✅ Zapisano pomyślnie! GitHub buduje stronę (ok. 60s).");
-            pendingChanges = {}; // Czyścimy pamięć
-            const status = document.getElementById('page-status');
-            status.innerText = "✅ Wszystko zapisane";
-            status.style.color = "#22c55e";
+            alert("✅ Zmiany wysłane do GitHuba! Strona odświeży się za ok. 60s.");
+            pendingChanges = {}; // Czyścimy listę zmian
+            document.getElementById('page-status').innerText = "✅ Zapisano pomyślnie";
+            document.getElementById('page-status').style.color = "#22c55e";
         } else {
             alert("❌ Błąd: " + result.error);
         }
     } catch (e) {
         alert("❌ Błąd połączenia z serwerem.");
     } finally {
-        btn.innerText = "💾 ZAPISZ WSZYSTKO";
+        btn.innerText = originalText;
         btn.disabled = false;
     }
 }
