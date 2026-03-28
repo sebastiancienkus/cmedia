@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMedia Visual CMS | Professional Style Guide</title>
+    <title>CMedia Visual CMS | Professional Mode</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Style pomocnicze dla logowania i układu */
         .login-overlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; }
-        .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .login-card { background: #1e293b; padding: 40px; border-radius: 12px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .login-card h2 { margin-bottom: 20px; color: white; }
+        .login-card input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        .login-card input:focus { border-color: #3b82f6; }
         .hidden { display: none !important; }
-        #page-status { font-weight: bold; transition: all 0.3s ease; font-size: 13px; }
-        .live-link { display: block; margin-top: 10px; font-size: 12px; color: #3b82f6; text-decoration: none; border: 1px solid #3b82f6; padding: 8px; border-radius: 6px; text-align: center; transition: 0.2s; }
+        
+        #page-status { font-weight: bold; transition: all 0.3s ease; font-size: 13px; color: white; }
+        .live-link { display: block; margin: 10px; font-size: 11px; color: #3b82f6; text-decoration: none; border: 1px solid #3b82f6; padding: 8px; border-radius: 6px; text-align: center; transition: 0.2s; }
         .live-link:hover { background: rgba(59, 130, 246, 0.1); }
 
-        /* --- STYL DLA STYLE GUIDE --- */
+        /* Style dla suwaków Style Guide */
         .style-guide-box { padding: 12px; background: #111827; border-radius: 10px; margin: 10px; border: 1px solid #1f2937; }
         .style-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .style-row span { font-size: 11px; color: #9ca3af; }
@@ -28,12 +32,13 @@
     </style>
 </head>
 <body>
+
     <div id="login-screen" class="login-overlay">
         <div class="login-card">
             <h2>🔐 Panel CMS</h2>
             <input type="text" id="user" placeholder="Login">
             <input type="password" id="pass" placeholder="Hasło">
-            <button onclick="login()" class="btn-save" style="margin-top: 10px; width: 100%;">Zaloguj się</button>
+            <button onclick="login()" class="btn-save" style="margin-top: 10px; width: 100%; cursor: pointer;">Zaloguj się</button>
         </div>
     </div>
 
@@ -42,7 +47,7 @@
             <div class="sidebar-header"><span class="logo">🔧 CMedia CMS</span></div>
             
             <nav class="sidebar-nav">
-                <div class="nav-label">STRONY</div>
+                <div class="nav-label">NAWIGACJA</div>
                 <button onclick="loadPage('/')" class="nav-link active" id="btn-home">🏠 Strona Główna</button>
                 <a href="/" target="_blank" class="live-link">👁️ Zobacz Live</a>
 
@@ -73,56 +78,28 @@
             <header class="top-bar">
                 <span id="page-status">✅ System gotowy</span>
             </header>
-            <iframe id="site-preview"></iframe>
+            <iframe id="site-preview" style="width:100%; height:100%; border:none;"></iframe>
         </main>
     </div>
 
     <script>
+        // Zmienne globalne panelu
         let pendingChanges = {};
         let currentPath = '/';
 
-        // --- 🎨 FUNKCJA STYLE GUIDE ---
-        function updateTheme(type, value) {
-            // Mapa łącząca nazwy suwaków z kluczami w Twoim JSONie
-            const jsonKeyMap = {
-                'brand': 'brand',
-                'link': 'link',
-                'site-bg': 'site_bg',
-                'content-bg': 'content_bg',
-                'border': 'border_color',
-                'heading': 'heading',
-                'text': 'text'
-            };
-
-            const jsonKey = jsonKeyMap[type];
-            // Zapisujemy w pamięci zmian głęboko w global.theme.colors
-            pendingChanges[`global.theme.colors.${jsonKey}`] = value;
-            
-            // ⚡ NATYCHMIASTOWY PODGLĄD W RAMCE (Zmieniamy zmienną CSS w Iframe)
-            const iframe = document.getElementById('site-preview');
-            if (iframe.contentWindow) {
-                iframe.contentWindow.document.documentElement.style.setProperty(`--color-${type}`, value);
-            }
-            
-            updateStatusText();
-        }
-
-        function updateStatusText() {
-            const status = document.getElementById('page-status');
-            const count = Object.keys(pendingChanges).length;
-            status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
-            status.style.color = "#f97316";
-        }
-
-        // --- 🔒 AUTORYZACJA ---
+        // --- AUTORYZACJA ---
         function login() {
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
+            // Prosta weryfikacja (ta sama co w PHP dla spójności)
             if (u === 'seba' && p === '727911300') {
                 localStorage.setItem('cms_logged', 'true');
                 localStorage.setItem('cms_pass', p);
+                console.log("Zalogowano pomyślnie");
                 location.reload();
-            } else { alert("Błędne dane!"); }
+            } else { 
+                alert("Nieprawidłowy login lub hasło!"); 
+            }
         }
 
         function logout() {
@@ -138,16 +115,49 @@
             }
         }
 
-        // --- 📄 ŁADOWANIE PODSTRONY ---
+        // --- ZARZĄDZANIE PODGLĄDEM ---
         function loadPage(path) {
             currentPath = path;
             const iframe = document.getElementById('site-preview');
+            // Cache buster wymusza odświeżenie treści
             iframe.src = path + "?cms-edit=1&v=" + Date.now();
+            
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (path === '/') document.getElementById('btn-home').classList.add('active');
         }
 
-        // --- 📩 ODBIERANIE ZMIAN TEKSTU Z RAMKI ---
+        // --- SYSTEM STYLE GUIDE ---
+        function updateTheme(type, value) {
+            const jsonKeyMap = {
+                'brand': 'brand',
+                'link': 'link',
+                'site-bg': 'site_bg',
+                'content-bg': 'content_bg',
+                'border': 'border_color',
+                'heading': 'heading',
+                'text': 'text'
+            };
+
+            const jsonKey = jsonKeyMap[type];
+            pendingChanges[`global.theme.colors.${jsonKey}`] = value;
+            
+            // Podgląd na żywo w Iframe
+            const iframe = document.getElementById('site-preview');
+            if (iframe.contentWindow) {
+                iframe.contentWindow.document.documentElement.style.setProperty(`--color-${type}`, value);
+            }
+            
+            updateStatusText();
+        }
+
+        function updateStatusText() {
+            const status = document.getElementById('page-status');
+            const count = Object.keys(pendingChanges).length;
+            status.innerText = `⚠️ Niezapisane zmiany: ${count}`;
+            status.style.color = "#f97316";
+        }
+
+        // --- ODBIERANIE WIADOMOŚCI Z IFRAME ---
         window.addEventListener('message', function(e) {
             if (e.data.type === 'cms-text-change') {
                 const fullKey = e.data.scope === 'global' ? `global.${e.data.key}` : `index.${e.data.key}`;
@@ -156,7 +166,7 @@
             }
         });
 
-        // --- 💾 ZAPISYWANIE ---
+        // --- ZAPISYWANIE DO API ---
         async function saveAll() {
             if (Object.keys(pendingChanges).length === 0) return alert("Brak zmian do zapisu!");
             
@@ -171,4 +181,33 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: 'seba',
-                        password:
+                        password: localStorage.getItem('cms_pass'),
+                        changes: pendingChanges
+                    })
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    pendingChanges = {}; 
+                    status.innerText = "✅ Zapisano pomyślnie!";
+                    status.style.color = "#22c55e";
+                    setTimeout(() => { 
+                        status.innerText = "✅ System gotowy"; 
+                        status.style.color = "white"; 
+                    }, 3000);
+                } else {
+                    alert("Błąd API: " + result.error);
+                }
+            } catch (e) {
+                alert("Błąd krytyczny: Brak połączenia z serwerem.");
+            } finally {
+                btn.innerText = "💾 ZAPISZ WSZYSTKO";
+                btn.disabled = false;
+            }
+        }
+
+        // Start aplikacji
+        checkAuth();
+    </script>
+</body>
+</html>
