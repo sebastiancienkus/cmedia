@@ -66,7 +66,7 @@ const { title } = Astro.props;
       }
     });
 
-  // Inside src/layouts/Layout.astro
+// Inside src/layouts/Layout.astro
 
 function initCMS() {
   document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
@@ -74,11 +74,15 @@ function initCMS() {
     el.style.outline = "none";
     el.style.cursor = "text";
     
-    // --- 🛠️ ZMIANA: Z border-bottom na pełny border (ramkę) ---
-    // Stare: el.style.borderBottom = "2px dashed #f97316"; 
+    // --- ⚡ NOWE ROZWIĄZANIE (Wersja Profesjonalna) ---
+    el.style.border = "2px dashed #f97316";    // Pełna ramka
     
-    // Nowe (Pełna ramka, ciasna):
-    el.style.border = "2px dashed #f97316"; // Ta linijka dodaje ramkę ze wszystkich czterech stron
+    // 💡 Dodajemy margines wewnątrz, żeby tekst nie dotykał ramki
+    el.style.padding = "4px";                 
+    
+    // Opcjonalnie: Delikatnie zaokrąglone rogi ramki
+    el.style.borderRadius = "6px";
+    // ---------------------------------------------------
     
     el.addEventListener('blur', () => {
       // ... rest of your event listener stays the same ...
