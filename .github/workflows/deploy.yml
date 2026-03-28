@@ -25,13 +25,17 @@ jobs:
         run: npm run build
 
       - name: 📂 Deploy via FTP
-        uses: AykutSarac/ftp-deploy@v1.0.2
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          host: ${{ secrets.FTP_SERVER }}
-          user: ${{ secrets.FTP_USERNAME }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          localDir: ./dist/
-          # Używamy './', aby pliki trafiły dokładnie tam, gdzie ląduje połączenie FTP.
-          # Jeśli Twoje konto FTP celuje bezpośrednio w domenę, to kropka wystarczy.
-          remoteDir: ./
-          forcePassive: true
+          local-dir: ./dist/
+          # Używamy ścieżki względnej, żeby nie tworzyć podfolderów
+          server-dir: ./public_html/
+          protocol: ftp
+          port: 21
+          # --- KLUCZ DO SUKCESU NA SEOHOST ---
+          timeout: 90000
+          # Wymuszamy przesyłanie po jednym pliku, żeby nie zrywało połączenia
+          dangerously-disable-concurrent-uploads: true
