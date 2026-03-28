@@ -1,4 +1,4 @@
-name: 🚀 Deploy Astro to Seohost
+name: 🚀 Deploy to Production
 
 on:
   push:
@@ -6,32 +6,36 @@ on:
       - main
 
 jobs:
-  web-deploy:
-    name: 🎉 Build and Deploy
+  build:
+    name: 🏗️ Build & 🛰️ Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: 🚚 Pobieranie kodu z GitHub
+      - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js (Wersja 22 dla Astro v5)
+      - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 22 # Zmienione na 22 dla Astro v5
 
-      - name: 📦 Instalacja zależności
-        run: npm install
+      - name: 📦 Install dependencies
+        run: npm install --legacy-peer-deps
 
-      - name: 🏗️ Budowanie projektu (Generowanie HTML)
+      - name: 🏗️ Build Astro
         run: npm run build
 
-      - name: 📂 Wysyłka gotowych plików na Seohost
+      - name: 📂 Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
+          # Ustawiamy ścieżkę docelową dokładnie tak, jak miałeś wcześniej
           server-dir: ./public_html/
+          # --- POPRAWKI DLA STABILNOŚCI (Twoje sprawdzone parametry) ---
           protocol: ftp
           port: 21
-          dangerous-clean-slate: false
+          timeout: 60000
+          dangerously-disable-concurrent-uploads: true
+          state-name: .ftp-deploy-sync-state.json
