@@ -1,5 +1,4 @@
-name: 🚀 Deploy to Production
-
+          name: 🚀 Deploy to Production
 on:
   push:
     branches:
@@ -16,10 +15,10 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
       - name: 📦 Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: 🏗️ Build Astro
         run: npm run build
@@ -31,9 +30,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
+          # --- KLUCZOWA ZMIANA ŚCIEŻKI ---
           server-dir: ./
+          # --- POPRAWKI DLA STABILNOŚCI ---
           protocol: ftp
           port: 21
-          # Kluczowe dla Seohost: wysyłanie po jednym pliku, żeby nie zrywało połączenia
-          dangerously-disable-concurrent-uploads: true
           timeout: 60000
+          dangerously-disable-concurrent-uploads: true
+          state-name: .ftp-deploy-sync-state.json
