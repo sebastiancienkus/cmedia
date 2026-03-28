@@ -25,8 +25,8 @@ jobs:
       - name: 🏗️ Build Astro
         run: npm run build
 
-      - name: 🔐 Wstrzyknij Token do PHP
-        run: sed -i 's/SEKRETNY_TOKEN_Z_GITHUBA/${{ secrets.CMS_TOKEN }}/g' dist/cm-panel/api/save.php
+      - name: 🔐 Wstrzyknij Token do PHP (Visual)
+        run: sed -i 's/SEKRETNY_TOKEN_Z_GITHUBA/${{ secrets.CMS_TOKEN }}/g' dist/cm-panel/api/save-visual.php
 
       # --- KLUCZOWY KROK DLA TWOJEGO PANELU ---
       - name: 📄 Kopiuj dane do wersji produkcyjnej
