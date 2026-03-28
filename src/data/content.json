@@ -5,10 +5,10 @@
         "address": "Lublin",
         "theme": {
             "colors": {
-                "brand": "#f97316",
+                "brand": "#f80d0d",
                 "link": "#3b82f6",
-                "site_bg": "#0f172a",
-                "content_bg": "#1e293b",
+                "site_bg": "#dd0808",
+                "content_bg": "#de0d0d",
                 "border_color": "#334155",
                 "heading": "#ffffff",
                 "text": "#94a3b8"
