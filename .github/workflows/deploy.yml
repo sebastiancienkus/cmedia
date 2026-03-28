@@ -31,11 +31,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # PRÓBA A: Celujemy w folder subdomeny wewnątrz domains
-          server-dir: ./domains/ai.sebastiancienkus.com/public_html/
-          # JEŚLI TO NIE ZADZIAŁA, ZMIEŃ POWYŻSZĄ LINIĘ NA:
-          # server-dir: ./public_html/ai/
+          # --- KLUCZOWA ZMIANA ŚCIEŻKI ---
+          server-dir: ./
+          # --- POPRAWKI DLA STABILNOŚCI ---
           protocol: ftp
           port: 21
-          dangerously-disable-concurrent-uploads: true
           timeout: 60000
+          dangerously-disable-concurrent-uploads: true
+          state-name: .ftp-deploy-sync-state.json
