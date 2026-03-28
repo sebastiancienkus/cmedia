@@ -1,5 +1,5 @@
 ---
-// TUTAJ ŁADUJEMY MAGIĘ TAILWINDA 🎨
+// src/layouts/Layout.astro
 import '../styles/global.css';
 
 interface Props {
@@ -19,5 +19,61 @@ const { title } = Astro.props;
 	</head>
 	<body class="bg-slate-900 text-white antialiased">
 		<slot />
+
+		<script is:inline>
+			(function() {
+				const params = new URLSearchParams(window.location.search);
+				// Sprawdzamy czy jesteśmy w trybie edycji
+				if (params.has('cms-edit')) {
+					console.log("🛠️ Wizualny CMS: Aktywny");
+
+					// 1. Definiujemy tagi, które zawierają tekst
+					const tags = 'h1, h2, h3, h4, h5, h6, p, span, a, button, li, b, strong';
+					const elements = document.querySelectorAll(tags);
+
+					elements.forEach((el, index) => {
+						// Pomijamy elementy wewnątrz skryptów i nawigacji panelu jeśli takie są
+						if (el.closest('.cms-ui-ignore')) return;
+
+						// Nadajemy unikalny klucz, jeśli go nie ma (do rozpoznania przez system)
+						if (!el.hasAttribute('data-cms')) {
+							// Generujemy klucz na podstawie tagu i kolejności
+							const autoKey = `txt_${el.tagName.toLowerCase()}_${index}`;
+							el.setAttribute('data-cms', autoKey);
+						}
+
+						// Aktywujemy edycję
+						el.contentEditable = "true";
+						el.spellcheck = false;
+
+						// Dodajemy style wizualne dla edycji (pomarańczowa poświata)
+						el.style.outline = "none";
+						el.style.transition = "all 0.2s ease";
+						
+						el.addEventListener('focus', () => {
+							el.style.boxShadow = "0 0 0 2px #f97316"; // Tailwind orange-500
+							el.style.borderRadius = "4px";
+							el.style.backgroundColor = "rgba(249, 115, 22, 0.1)";
+						});
+
+						el.addEventListener('blur', () => {
+							el.style.boxShadow = "none";
+							el.style.backgroundColor = "transparent";
+
+							// WYSYŁAMY ZMIANĘ DO PANELU CMS
+							window.parent.postMessage({
+								type: 'cms-text-change',
+								key: el.getAttribute('data-cms'),
+								value: el.innerText,
+								pageId: window.location.pathname
+							}, '*');
+						});
+					});
+
+					// Informujemy panel, że strona jest gotowa do edycji
+					window.parent.postMessage({ type: 'cms-ready' }, '*');
+				}
+			})();
+		</script>
 	</body>
 </html>
