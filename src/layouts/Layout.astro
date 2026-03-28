@@ -21,52 +21,50 @@ const { title } = Astro.props;
 		
 		<slot />
 
-		<script is:inline>
+	<script is:inline>
   (function() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('cms-edit')) return;
 
-    console.log("⚡ Tryb LIVE-DATA: Synchronizacja z serwerem...");
+    console.log("⚡ Tryb LIVE-SYNC: Pobieranie najświeższych danych...");
 
-    // 1. Pobieramy świeży JSON z serwera (omijamy cache przez ?v=)
-    fetch('/content.json?v=' + Date.now())
-      .then(res => res.json())
-      .then(data => {
-        console.log("📦 Dane pobrane pomyślnie:", data);
+    // 1. Funkcja podmieniająca teksty na stronie
+    async function refreshContent() {
+      try {
+        // Pobieramy content.json bezpośrednio z serwera (omijamy cache)
+        const res = await fetch('/content.json?v=' + Date.now());
+        if (!res.ok) throw new Error("Brak pliku content.json na serwerze");
+        const data = await res.json();
 
-        // 2. Podmieniamy teksty LOKALNE (np. index.heroTitle)
+        // Podmiana danych LOKALNYCH (np. index.heroTitle)
         document.querySelectorAll('[data-cms]').forEach(el => {
           const fullKey = el.getAttribute('data-cms');
-          if (fullKey.includes('.')) {
-            const [page, key] = fullKey.split('.');
-            // Sprawdzamy czy klucz istnieje w JSONIE i podmieniamy
-            if (data.pages && data.pages[page] && data.pages[page][key]) {
-              el.innerText = data.pages[page][key];
-            }
+          const [page, key] = fullKey.split('.');
+          if (data.pages?.[page]?.[key]) {
+            el.innerText = data.pages[page][key];
           }
         });
 
-        // 3. Podmieniamy teksty GLOBALNE (np. phone, email)
+        // Podmiana danych GLOBALNYCH
         document.querySelectorAll('[data-cms-global]').forEach(el => {
           const key = el.getAttribute('data-cms-global');
-          if (data.global && data.global[key]) {
+          if (data.global?.[key]) {
             el.innerText = data.global[key];
           }
         });
 
-        // 4. Gdy dane są już "świeże", aktywujemy edycję wizualną
-        activateEditable();
-      })
-      .catch(err => console.error("❌ Błąd synchronizacji danych:", err));
+        console.log("✅ Dane zsynchronizowane.");
+      } catch (e) {
+        console.warn("ℹ️ System czeka na pierwszy zapis, aby utworzyć plik lokalny.");
+      }
+    }
 
-    function activateEditable() {
-      const allEditable = document.querySelectorAll('[data-cms], [data-cms-global]');
-      
-      allEditable.forEach(el => {
+    // 2. Aktywacja edytora wizualnego
+    function initEditable() {
+      document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
         el.contentEditable = "true";
+        el.style.borderBottom = "2px dashed #f97316";
         el.style.outline = "none";
-        el.style.cursor = "text";
-        el.style.borderBottom = el.hasAttribute('data-cms-global') ? "2px dashed #22c55e" : "2px dashed #f97316";
 
         el.addEventListener('blur', () => {
           window.parent.postMessage({
@@ -77,10 +75,11 @@ const { title } = Astro.props;
           }, '*');
         });
       });
-      
-      // Informujemy panel, że jesteśmy gotowi
       window.parent.postMessage({ type: 'cms-ready' }, '*');
     }
+
+    // Odpalamy: Najpierw synchronizacja danych, potem włączenie edycji
+    refreshContent().then(initEditable);
   })();
 </script>
 	</body>
