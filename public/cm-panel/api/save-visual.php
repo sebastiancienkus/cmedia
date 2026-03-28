@@ -9,7 +9,7 @@ $github_repo = 'cmedia';
 $file_path = 'src/data/content.json'; 
 
 // Prosta autoryzacja
-if ($data['username'] !== 'seba' || $data['password'] !== 'TWOJE_HASLO') {
+if ($data['username'] !== 'seba' || $data['password'] !== '727911300') {
     echo json_encode(['success' => false, 'error' => 'Błąd logowania']); exit;
 }
 
