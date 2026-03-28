@@ -1,5 +1,4 @@
 name: 🚀 Deploy to Production
-
 on:
   push:
     branches:
@@ -16,7 +15,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
       - name: 📦 Install dependencies
         run: npm install --legacy-peer-deps
@@ -31,11 +30,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # Używamy ścieżki względnej, żeby nie tworzyć podfolderów
-          server-dir: ./public_html/
+          # --- KLUCZOWA ZMIANA ŚCIEŻKI ---
+          server-dir: ./
+          # --- POPRAWKI DLA STABILNOŚCI ---
           protocol: ftp
           port: 21
-          # --- KLUCZ DO SUKCESU NA SEOHOST ---
-          timeout: 90000
-          # Wymuszamy przesyłanie po jednym pliku, żeby nie zrywało połączenia
+          timeout: 60000
           dangerously-disable-concurrent-uploads: true
+          state-name: .ftp-deploy-sync-state.json
