@@ -26,33 +26,47 @@ const { title } = Astro.props;
     const params = new URLSearchParams(window.location.search);
     if (!params.has('cms-edit')) return;
 
-    // ⚡ INSTANT LOAD: Pobierz najnowsze dane z serwera, omijając cache
+    console.log("⚡ Tryb LIVE-DATA: Synchronizacja z serwerem...");
+
+    // 1. Pobieramy świeży JSON z serwera (omijamy cache przez ?v=)
     fetch('/content.json?v=' + Date.now())
       .then(res => res.json())
       .then(data => {
-        // Podmiana tekstów na stronie danymi z pliku
+        console.log("📦 Dane pobrane pomyślnie:", data);
+
+        // 2. Podmieniamy teksty LOKALNE (np. index.heroTitle)
         document.querySelectorAll('[data-cms]').forEach(el => {
           const fullKey = el.getAttribute('data-cms');
           if (fullKey.includes('.')) {
             const [page, key] = fullKey.split('.');
-            if (data.pages?.[page]?.[key]) el.innerText = data.pages[page][key];
+            // Sprawdzamy czy klucz istnieje w JSONIE i podmieniamy
+            if (data.pages && data.pages[page] && data.pages[page][key]) {
+              el.innerText = data.pages[page][key];
+            }
           }
         });
-        
+
+        // 3. Podmieniamy teksty GLOBALNE (np. phone, email)
         document.querySelectorAll('[data-cms-global]').forEach(el => {
           const key = el.getAttribute('data-cms-global');
-          if (data.global?.[key]) el.innerText = data.global[key];
+          if (data.global && data.global[key]) {
+            el.innerText = data.global[key];
+          }
         });
 
-        console.log("⚡ Dane zsynchronizowane natychmiastowo.");
-        initCMS(); // Aktywuj edycję po załadowaniu danych
-      });
+        // 4. Gdy dane są już "świeże", aktywujemy edycję wizualną
+        activateEditable();
+      })
+      .catch(err => console.error("❌ Błąd synchronizacji danych:", err));
 
-    function initCMS() {
-      document.querySelectorAll('[data-cms], [data-cms-global]').forEach(el => {
+    function activateEditable() {
+      const allEditable = document.querySelectorAll('[data-cms], [data-cms-global]');
+      
+      allEditable.forEach(el => {
         el.contentEditable = "true";
         el.style.outline = "none";
-        el.style.borderBottom = "2px dashed #f97316";
+        el.style.cursor = "text";
+        el.style.borderBottom = el.hasAttribute('data-cms-global') ? "2px dashed #22c55e" : "2px dashed #f97316";
 
         el.addEventListener('blur', () => {
           window.parent.postMessage({
@@ -63,9 +77,11 @@ const { title } = Astro.props;
           }, '*');
         });
       });
+      
+      // Informujemy panel, że jesteśmy gotowi
       window.parent.postMessage({ type: 'cms-ready' }, '*');
     }
   })();
-		</script>
+</script>
 	</body>
 </html>
