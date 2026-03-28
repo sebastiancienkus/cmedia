@@ -31,8 +31,7 @@ jobs:
           user: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           localDir: ./dist/
-          # Zmieniamy na './' - to oznacza, że robot po zalogowaniu 
-          # ma wrzucić pliki bezpośrednio tam, gdzie się znajduje,
-          # bez tworzenia dodatkowych folderów.
-          remoteDir: ./public_html/
+          # Używamy './', aby pliki trafiły bezpośrednio do folderu, 
+          # w którym ląduje Twoje połączenie FTP (bez tworzenia podfolderów)
+          remoteDir: ./
           forcePassive: true
