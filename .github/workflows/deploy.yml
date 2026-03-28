@@ -31,9 +31,12 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # PRÓBA A: Celujemy w folder subdomeny wewnątrz domains
+          # KLUCZOWA ZMIANA:
+          # Skoro konto robot-ai już celuje w public_html,
+          # używamy pustego server-dir lub kropki.
           server-dir: ./
           protocol: ftp
           port: 21
+          # Czyścimy stare śmieci, żeby nie było 404
+          dangerous-clean-slate: true
           dangerously-disable-concurrent-uploads: true
-          timeout: 60000
