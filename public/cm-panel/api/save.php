@@ -8,7 +8,7 @@ $moje_haslo = '727911300';
 $github_token = 'SEKRETNY_TOKEN_Z_GITHUBA'; 
 $github_user = 'sebastiancienkus';
 $github_repo = 'cmedia';
-$file_path = 'src/data/content.json';
+$file_path = 'public/content.json';  
 // --------------------
 
 // 1. Uniwersalne sprawdzenie hasła
