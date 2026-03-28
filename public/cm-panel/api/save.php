@@ -10,7 +10,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 $moj_login = 'seba';               // Wymyśl login do panelu (np. admin)
 $moje_haslo = '727911300';             // Wymyśl hasło do panelu
 
-$github_token = 'SEKRETNY_TOKEN_Z_GITHUBA' // Zostaw tak jak jest
+$github_token = 'SEKRETNY_TOKEN_Z_GITHUBA'; // Zostaw tak jak jest
 $github_user = 'sebastiancienkus';                // TWOJ_LOGIN_GITHUB Np. sebastiancienkus
 $github_repo = 'cmedia';       // NAZWA_TWOJEGO_REPOZYTORIUM', Nazwa projektu na GitHubie
 $file_path = 'src/data/content.json';              // Ścieżka do pliku (tego nie zmieniaj)
