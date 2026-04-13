@@ -11,7 +11,7 @@
                 "content_bg": "#0000ff",
                 "border_color": "#334155",
                 "heading": "#f56e00",
-                "text": "#c2c2c2"
+                "text": "#ffffff"
             }
         }
     },
@@ -19,6 +19,11 @@
         "index": {
             "heroTitle": "Nagłówek H1",
             "heroSubtitle": "Przykładowy tekst"
+        }
+    },
+    "index": {
+        "index": {
+            "heroTitle": "To jest przykładowy nagłówek H1"
         }
     }
 }
