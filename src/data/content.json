@@ -5,8 +5,8 @@
         "address": "Lublin",
         "theme": {
             "colors": {
-                "brand": "#f80d0d",
-                "link": "#3b82f6",
+                "brand": "#f50000",
+                "link": "#d10000",
                 "site_bg": "#ffffff",
                 "content_bg": "#0000ff",
                 "border_color": "#334155",
